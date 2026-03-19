@@ -161,7 +161,7 @@ set par(first-line-indent: 0pt)
     }
     
 
-#heading(level: 4, numbering: none)[负载均衡]
+
     在MoE训练过程中，常见的挑战是路由坍缩现象，即门控网络倾向于将大多数样本分配给少数几个表现较好的专家，导致这些专家过载，而其他专家处于闲置状态。这不仅浪费了模型容量，也限制了专家的专业化分工。为了解决这一问题，通常会引入负载均衡损失：
     $ cal(L)_"balance" = N dot sum_(i=1)^N f_i dot P_i , $
     #{

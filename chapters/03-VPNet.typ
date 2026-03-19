@@ -208,7 +208,7 @@ set par(first-line-indent: 0pt)
 
 === 对比实验
 
-为了验证本章方法在多任务联合训练模式下的有效性，本文将 VP-Net 与近年来提出的主流一体化图像复原网络进行了全面对比，对比方法包括 Gridformer~@compare_allinone_wang2024gridformer、Transweather~@compare_allinone_valanarasu2022transweather、CAPTNet~@compare_allinone_gao2024prompt、AdaIR~@compare_allinone_cui2024adair 以及 PromptIR~@allinone_potlapalli2024promptir。
+为了验证本章方法在多任务联合训练模式下的有效性，本文将 VP-Net 与近年来提出的主流一体化图像复原网络进行了全面对比，对比方法包括 Gridformer~@compare_allinone_wang2024gridformer、Transweather~@compare_allinone_valanarasu2022transweather、CAPTNet~@gao2024prompt、AdaIR~@cui2025adair 以及 PromptIR~@potlapalli2023promptir。
 
 在进行对比实验时，本文需要克服一个技术障碍：现有的通用一体化图像复原方法（如 Transweather、PromptIR）通常仅针对 RGB 图像设计，默认输入通道为 3。然而，GISR 任务涉及多模态数据，且通道数各异。全色锐化：4通道的LRMS图像 和 1通道的PAN图像；深度图超分：3通道的RGB图像 和 1通道的Depth图像；磁共振图像超分： 1通道的 T1图像 和 1通道的 T2图像。为了公平地将这些基准方法应用于 GISR 任务，本文参考了 VP-Net 的输入处理方式，对基准模型的输入层进行了轻量级适配：针对每个特定的输入通道配置，本文分别初始化了独立的浅层特征映射层，将不同维度的原始输入映射到统一的特征维度 $C$。这种处理方式在不改变基准模型核心架构与参数量级的前提下，使其能够兼容多模态、多维度的 GISR 数据输入。
 

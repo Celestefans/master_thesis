@@ -138,7 +138,7 @@ MAG-Net 基于 PyTorch 框架实现，并在单块 NVIDIA RTX 3090 GPU 上进行
 //***********  all-in-one  ***********
 #heading(level: 4, numbering: none)[一体化方法对比]
 
-本文将 MAG-Net 与目前领先的一体化图像复原方法进行了比较，包括 AirNet~@allinone_li2022all、TransWeather~@compare_allinone_valanarasu2022transweather、PromptIR~@allinone_potlapalli2024promptir、GridFormer~@compare_allinone_wang2024gridformer、CAPTNet~@compare_allinone_gao2024prompt 和 AdaIR~@compare_allinone_cui2024adair。这些方法大多基于通用的 Encoder-Decoder 架构或 Transformer 结构，旨在通过单一网络权重处理多种退化类型（如去雨、去噪、去雾）。
+本文将 MAG-Net 与目前领先的一体化图像复原方法进行了比较，包括 AirNet~@allinone_li2022all、TransWeather~@compare_allinone_valanarasu2022transweather、PromptIR~@potlapalli2023promptir、GridFormer~@compare_allinone_wang2024gridformer、CAPTNet~@gao2024prompt 和 AdaIR~@cui2025adair。这些方法大多基于通用的 Encoder-Decoder 架构或 Transformer 结构，旨在通过单一网络权重处理多种退化类型（如去雨、去噪、去雾）。
 
 为了将这些主要针对 RGB 图像（3 通道）设计的通用模型适配到 GISR 任务中，必须解决输入维度不一致的问题。GISR 的三个子任务具有完全不同的输入数据结构：磁共振超分输入为 2 通道（Target + Guide），深度图超分为 4 通道（Target + RGB Guide），而全色锐化则为 5 通道（4-band MS + PAN）。直接将这些数据输入到期望 3 通道输入的预训练模型中是不可行的。为此，本文在所有对比实验中均采用了与 VP-Net/MAG-Net 相同的多头输入适配策略：为每个任务的特定通道数单独实例化一个浅层映射层，将不同维度的原始输入统一映射到该模型的标准特征维度。这种做法确保了对比的公平性——所有模型都获得了完全相同的信息量，且核心处理逻辑保持原样。
 
@@ -179,19 +179,19 @@ MAG-Net 基于 PyTorch 框架实现，并在单块 NVIDIA RTX 3090 GPU 上进行
 为了验证 MAG-Net 在特定领域是否也能达到甚至超越专用模型的水平，本文将 MAG-Net 分别与全色锐化、磁共振超分和深度图超分领域的先进单任务模型（SOTA）进行了对比。
 
 **全色锐化任务：**
-如@tbl:MAGNet_one-by-one_pansharpening 所示，本文将 MAG-Net 与包括 AWFLN~@compare_pan_lu2023awfln、DISPNet~@compare_pan_jia2018dispnet、LAGConv~@compare_pan_jin2022lagconv、M3DNet~@compare_pan_li2020m3dnet、FusionMamba~@compare_pan_peng2024fusionmamba 和 Dif-Pan~@compare_pan_cao2024diffusion 在内的经典及最新深度学习方法进行了比较。尽管这些方法是专门为全色锐化任务设计并针对特定光谱特性进行了优化的，MAG-Net 依然在所有三个数据集（WorldView-4, QuickBird, GaoFen-1）上取得了具有竞争力的表现。具体而言，MAG-Net 在保持光谱保真度（SAM）和空间细节恢复（ERGAS）方面表现优异，这得益于其强大的 Transformer 骨干网络以及通过语义提示明确激活的锐化感知专家模块。@fig:compare_one-by-one_pansharpening 的可视化结果进一步显示，MAG-Net 生成的图像在边缘清晰度和光谱一致性上均优于许多现有方法，有效避免了常见的光谱扭曲现象。
+如@tbl:MAGNet_one-by-one_pansharpening 所示，本文将 MAG-Net 与包括 AWFLN~@compare_pan_lu2023awfln、DISPNet~@compare_pan_jia2018dispnet、LAGConv~@compare_pan_jin2022lagconv、M3DNet~@compare_pan_li2020m3dnet、FusionMamba~@peng2024fusionmamba 和 Dif-Pan~@compare_pan_cao2024diffusion 在内的经典及最新深度学习方法进行了比较。尽管这些方法是专门为全色锐化任务设计并针对特定光谱特性进行了优化的，MAG-Net 依然在所有三个数据集（WorldView-4, QuickBird, GaoFen-1）上取得了具有竞争力的表现。具体而言，MAG-Net 在保持光谱保真度（SAM）和空间细节恢复（ERGAS）方面表现优异，这得益于其强大的 Transformer 骨干网络以及通过语义提示明确激活的锐化感知专家模块。@fig:compare_one-by-one_pansharpening 的可视化结果进一步显示，MAG-Net 生成的图像在边缘清晰度和光谱一致性上均优于许多现有方法，有效避免了常见的光谱扭曲现象。
 
 // one-by-one: pansharpening
 #include "../tables/04/one-by-one/Pansharpening.typ"
 #figure(
   caption: [单任务设置下全色锐化任务的可视化对比与误差图。],
 )[
-#image("../images/TNNLS/compare_single_pan.png", width: 105%)
+#image("../images/TNNLS/compare_single_pan.png", width: 100%)
 ] <compare_one-by-one_pansharpening>
 
 
 **磁共振图像超分任务：**
-在医学图像领域，本文将 MAG-Net 与 MGDUN~@compare_mri_yang2023mgdun、DuDoNet~@compare_mri_dudonet_lei2024joint、MINet~@compare_mri_pang2020multi、MASA~@compare_mri_lu2021masa、McMRSR~@compare_mri_li2022transformer 和 SANet~@compare_mri_feng2024exploring 等专用模型进行了对比。@tbl:MAGNet_one-by-one_mri 展示了定量评估结果。MAG-Net 在 PSNR 和 SSIM 指标上持续领先，特别是在高倍率（$4 times$ 和 $8 times$）下优势更为明显。医学图像通常具有复杂的解剖结构且对细节丢失极为敏感，MAG-Net 通过语义提示准确识别出 MRI 任务特征，并动态调用能够捕捉精细纹理的专家网络，从而实现了更高质量的解剖结构重建。@fig:compare_one-by-one_mri 的误差图显示，MAG-Net 的重建结果与 Ground Truth 之间的残差最小，有效抑制了伪影的产生。
+在医学图像领域，本文将 MAG-Net 与 MGDUN~@compare_mri_yang2023mgdun、DuDoNet~@lei2023deep、MINet~@compare_mri_pang2020multi、MASA~@compare_mri_lu2021masa、McMRSR~@compare_mri_li2022transformer 和 SANet~@feng2024exploring 等专用模型进行了对比。@tbl:MAGNet_one-by-one_mri 展示了定量评估结果。MAG-Net 在 PSNR 和 SSIM 指标上持续领先，特别是在高倍率（$4 times$ 和 $8 times$）下优势更为明显。医学图像通常具有复杂的解剖结构且对细节丢失极为敏感，MAG-Net 通过语义提示准确识别出 MRI 任务特征，并动态调用能够捕捉精细纹理的专家网络，从而实现了更高质量的解剖结构重建。@fig:compare_one-by-one_mri 的误差图显示，MAG-Net 的重建结果与 Ground Truth 之间的残差最小，有效抑制了伪影的产生。
 
 // one-by-one: mri
 #include "../tables/04/one-by-one/MRI.typ"
@@ -202,7 +202,7 @@ MAG-Net 基于 PyTorch 框架实现，并在单块 NVIDIA RTX 3090 GPU 上进行
 ] <compare_one-by-one_mri>
 
 **深度图超分任务：**
-针对深度图超分，本文选取了 GeoDSR~@compare_depth_geodsr、DAGF~@compare_depth_dagf:zhong2023deep、AHMF~@compare_depth_ahmf:zhong2021high、DCTNet~@compare_depth_dctnet:zhao2022discrete、DKN~@depth_kim2021deformable 和 SGNet~@depth_wang2024sgnet 作为对比基准。由于深度图具有分段平滑的特性，且边缘信息的保持至关重要。如@tbl:MAGNet_one-by-one_depth 所示，MAG-Net 在 RMSE 指标上取得了最低的误差，表明其恢复的深度值最接近真实值。这主要归功于 MAG-Net 的多模态引导机制，它不仅利用了高分辨率 RGB 图像作为结构引导，还通过语义提示强化了模型对深度图几何特性的理解，使其能够更好地区分边缘与平滑区域。@fig:compare_one-by-one_depth 的可视化结果表明，MAG-Net 生成的深度图边缘锐利且内部平滑，显著减少了以往方法中常见的模糊和锯齿效应。
+针对深度图超分，本文选取了 GeoDSR~@compare_depth_geodsr、DAGF~@zhong2023deep、AHMF~@compare_depth_ahmf:zhong2021high、DCTNet~@compare_depth_dctnet:zhao2022discrete、DKN~@depth_kim2021deformable 和 SGNet~@depth_wang2024sgnet 作为对比基准。由于深度图具有分段平滑的特性，且边缘信息的保持至关重要。如@tbl:MAGNet_one-by-one_depth 所示，MAG-Net 在 RMSE 指标上取得了最低的误差，表明其恢复的深度值最接近真实值。这主要归功于 MAG-Net 的多模态引导机制，它不仅利用了高分辨率 RGB 图像作为结构引导，还通过语义提示强化了模型对深度图几何特性的理解，使其能够更好地区分边缘与平滑区域。@fig:compare_one-by-one_depth 的可视化结果表明，MAG-Net 生成的深度图边缘锐利且内部平滑，显著减少了以往方法中常见的模糊和锯齿效应。
 
 // one-by-one: depth
 #include "../tables/04/one-by-one/Depth.typ"
@@ -266,7 +266,7 @@ MAG-Net 基于 PyTorch 框架实现，并在单块 NVIDIA RTX 3090 GPU 上进行
 #figure(
   caption: [MAG-Net 在所有数据集的所有 GISR 子任务上的提示表示 t-SNE 可视化。],
 )[
-#image("../images/TNNLS/tSNE1.png", width: 75%)
+#image("../images/TNNLS/tSNE1.png", width: 70%)
 ] <tSNE-1>
 
 进一步地，为了探究提示对细粒度任务属性的敏感性，本文在@fig:tSNE-2 中专门展示了 MRI 图像超分任务在不同缩放倍率（$2 times$、$4 times$、$8 times$）下的提示分布。可视化结果显示，即便是在同一任务模态内部，对应于不同缩放因子的提示也呈现出了有序的聚类结构。$2 times$、$4 times$ 和 $8 times$ 的提示分别形成了独立的条带状子簇，这表明 MAG-Net 生成的提示不仅编码了高层的任务类别信息（Task Type），还敏锐地捕捉到了底层的操作参数（。这种细粒度的语义感知能力使得模型能够根据具体的退化程度动态调整专家的激活模式，从而在统一框架下实现对多尺度任务的精细化处理。
@@ -279,7 +279,7 @@ MAG-Net 基于 PyTorch 框架实现，并在单块 NVIDIA RTX 3090 GPU 上进行
 #figure(
   caption: [MAG-Net 在磁共振图像超分任务中不同超分比率下的提示表示 t-SNE 可视化。],
 )[
-#image("../images/TNNLS/tSNE2.png", width: 80%)
+#image("../images/TNNLS/tSNE2.png", width: 70%)
 ] <tSNE-2>
 
 
