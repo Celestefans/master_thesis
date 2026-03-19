@@ -199,7 +199,8 @@
 = 攻读硕士学位期间科研情况
 
 #heading(level: 4, numbering: none)[论文发表情况]
-  - WANG T, #strong[WANG J], YAN Q, et al. Task-aware All-in-one Guided Image Super-Resolution[J]. Pattern Recognition, 2026: 11348（SCI 1区，学生列表一作）
+  // - WANG T, #strong[WANG J], YAN Q, et al. 
+  Task-aware All-in-one Guided Image Super-Resolution[J]. Pattern Recognition, 2026: 11348（SCI 1区）
 
 
 
