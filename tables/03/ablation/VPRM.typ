@@ -1,5 +1,5 @@
 #figure(
-  caption: [VPRM 模块有效性消融实验结果分析],
+  caption: [VPRM 模块有效性消融实验结果分析。],
   kind: table,
 )[
   #set text(size: 9pt)
@@ -47,4 +47,4 @@
     // 底部粗线
     table.hline(stroke: 1.2pt),
   )
-] <tab:VPNet_ablation_VPRM>
+] <VPNet_ablation_VPRM>

@@ -1,5 +1,5 @@
 #figure(
-  caption: [不同任务组合（Task P, M, D）消融实验结果分析],
+  caption: [不同任务组合（Task P, M, D）消融实验结果分析。],
   kind: table,
 )[
   #set text(size: 9pt)
@@ -78,4 +78,4 @@
     // 底部粗线
     table.hline(stroke: 1.2pt),
   )
-] <tab:ablation_task_combination>
+] <ablation_task_combination>

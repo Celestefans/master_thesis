@@ -1,0 +1,478 @@
+\documentclass[lettersize,journal]{IEEEtran}
+\usepackage{amsmath,amsfonts}
+\usepackage{algorithmic}
+\usepackage{algorithm}
+\usepackage{array}
+\usepackage[caption=false,font=normalsize,labelfont=sf,textfont=sf]{subfig}
+\usepackage{textcomp} 
+\usepackage{graphicx}
+\usepackage{cite}
+\usepackage{tabularx} % 在导言区添加
+\usepackage[normalem]{ulem}  % 支持 \underline{}
+\renewcommand{\ULdepth}{1.8pt} % 调整下划线位
+\usepackage{pifont}
+\usepackage{cleveref}
+\crefname{figure}{Figure}{Figures}
+\usepackage{multirow}
+\usepackage{booktabs}
+\hyphenation{op-tical net-works semi-conduc-tor IEEE-Xplore}
+
+\begin{document}
+
+\title{Task-aware All-in-one Guided Image Super-Resolution}
+
+\author{Tingting Wang, Jun Wang, Qiuhai Yan, Junkang Zhang, Faming Fang,  Guixu Zhang 
+\thanks{Tingting Wang, Jun Wang, Qiuhai Yan, Junkang Zhang, Faming Fang and Guixu Zhang are with the School of Computer Science and Technology, East China Normal University, Shanghai, 200241, China. (e-mail: tingtingwang@cs.ecnu.edu.cn; 51265901080@stu.ecnu.edu.cn, yanqiuhai16@163.com, 52215901001@stu.ecnu.edu.cn; fmfang@cs.ecnu.edu.cn; gxzhang@cs.ecnu.edu.cn).}}
+
+% The paper headers
+\markboth{Journal of \LaTeX\ Class Files,~Vol.~14, No.~8, August~2021}%
+{Shell \MakeLowercase{\textit{et al.}}: A Sample Article Using IEEEtran.cls for IEEE Journals}
+
+\IEEEpubid{0000--0000/00\$00.00~\copyright~2021 IEEE}
+% Remember, if you use this you must call \IEEEpubidadjcol in the second
+% column for its text to clear the IEEEpubid mark.
+
+\maketitle
+
+\begin{abstract}
+Guided image super-resolution (GISR) aims to enhance the resolution of a low-resolution (LR) target image by leveraging complementary information from a high-resolution (HR) guidance image. However, due to the substantial modality diversity among GISR subtasks, most existing methods are tailored to individual subtasks, which significantly limits their generalizability and practical scalability. 
+To address this limitation, we propose \textbf{MAG-Net}, the first \textbf{all-in-one GISR framework} capable of handling multiple GISR subtasks within a single unified model. 
+MAG-Net is built upon a shared encoder-decoder backbone and integrates two key modules to handle heterogeneous input modalities and diverse task objectives.
+The \textit{Multi-modal Prompt Generation Module} (MPGM) dynamically generates task-aware prompts by jointly encoding the input image pair and pre-defined textual task descriptions. These prompts serve as soft instructions, effectively capturing both visual features and textural cues, thus enabling the model to adaptively distinguish and respond to different GISR subtasks. 
+The \textit{Multi-Guidance Routing Module} (MGRM) is then designed to mitigate task interference and enhance feature specialization. This module leverages a Mixture-of-Experts (MoE) strategy to adaptively route intermediate features through task-relevant expert branches, guided by the task-aware prompt and the characteristics of the guidance image. Extensive experiments across various GISR subtasks demonstrate that MAG-Net achieves state-of-the-art performance in both all-in-one and one-by-one training settings. %The two proposed modules, MPGM and MGRM, are shown to be effective and generalizable, highlighting the potential of MAG-Net as a versatile solution for unified GISR. 
+Code and pre-trained models will be released upon paper acceptance.
+
+%Guided image super-resolution (GISR) aims to enhance the resolution of a low-resolution (LR) target image with the assistance of another high-resolution (HR) guidance image. Due to the significant cross-task gap, existing GISR methods usually focus on one specific subtask, resulting in limited model generalizability across diverse subtasks. To address this limitation, we introduce MAG-Net, an all-in-one GISR model that integrates multiple GISR tasks within a unified framework. To handle input image pairs of various modalities simultaneously, we introduce a Multi-modal Prompt Generation Module (MPGM) that dynamically generates multi-modal prompts based on source images and task-specific textual guidance. These prompts, serving as task-specific instructions, incorporate image-domain details from the source images and semantic information from the task description. Furthermore, to mitigate task interference, we propose a Multi-Guidance Routing Module (MGRM) to adaptively select suitable experts for processing intermediate features of different subtasks based on prompts from MPGM and guidance images. Extensive experiments across diverse GISR subtasks validate the effectiveness of the two plug-in modules and the superior performance of MAG-Net, both in all-in-one and one-by-one settings. The code and pre-trained models will be made available upon paper acceptance.
+\end{abstract}
+
+\begin{IEEEkeywords}
+Guided image super-resolution, All-in-one, Pansharpening, MR image super-resolution, Depth image super-resolution
+\end{IEEEkeywords}
+
+\section{Introduction}
+
+\IEEEPARstart{I}{mage} super-resolution (SR) refers to the task of reconstructing a high-resolution (HR) image from its low-resolution (LR) counterpart, aiming to enhance visual quality and recover fine-grained structural details. Within the broader scope of SR, a specialized category known as guided image super-resolution (GISR) has garnered increasing attention. Unlike traditional single-image SR that relies solely on the degraded input, GISR introduces an auxiliary HR image from a different modality to guide the SR process. This guidance image, often referred to as prior information or an adjunctive cue, provides complementary structural or contextual information that facilitates more accurate and detailed reconstruction.
+By leveraging this additional guidance, GISR effectively mitigates the ill-posed nature of SR tasks and significantly improves the fidelity of the reconstructed results. The guidance image may manifest in various forms, such as constraints, priors, or reference images, and enables the model to intelligently infer high-frequency components that are otherwise challenging to recover from the LR input alone.
+
+Typical subtasks under the GISR framework include pansharpening~\cite{compare_pan_peng2024fusionmamba,compare_pan_cao2024diffusion}, multi-contrast magnetic resonance (MR) image SR~\cite{compare_mri_yang2023mgdun,compare_mri_dudonet_lei2024joint}, and depth image SR guided by corresponding RGB images~\cite{depth_wang2024sgnet}. Pansharpening, for instance, utilizes an HR panchromatic (PAN) image to guide the enhancement of an LR multispectral (LRMS) image, effectively overcoming the spatial-spectral resolution trade-off typically encountered in satellite imaging systems.
+In depth image SR, the HR RGB image provides fine texture and edge information to guide the enhancement of the LR depth image, enabling more precise recovery of geometric structures and improving visual coherence.
+For MR image SR, the resolution of a specific contrast in a target MR image is improved using guidance from an auxiliary contrast image, thereby enhancing the diagnostic value and anatomical clarity in medical imaging scenarios.
+
+
+
+
+\begin{figure*}[!t] % htbp 表示放置的位置
+    \centering
+    \includegraphics[width=0.85\textwidth]{pic/first_image.png} % 图片路径和大小
+    \caption{(a) Task-specific SR networks designed for each GISR subtask; (b) Our proposed all-in-one SR network to handle various GISR subtasks simultaneously.}
+    \label{fig:First} % 添加标签用于引用
+\end{figure*}
+ 
+
+
+In recent years, deep learning based GISR have garnered significant attention. Methods founded on Convolutional Neural Networks (CNNs)~\cite{compare_pan_lu2023awfln}, Transformers~\cite{compare_mri_li2022transformer}, and generative models such as diffusion~\cite{compare_pan_cao2024diffusion} and Mamba~\cite{compare_pan_peng2024fusionmamba} have been consistently introduced. However, due to significant cross-task gaps (e.g., variations in image modalities and application contexts) among various subtasks of GISR, the vast majority of methods only focus on one specific subtask, leading to the formulation of task-specific networks and loss functions, as illustrated in Figure~\ref{fig:First}(a). This specialization often results in limited model generalizability, impeding the transferability of models across diverse subtasks.
+Although some methods have attempted to design models that can be applied to multiple GISR subtasks~\cite{allinone_zhou2023memory}, they still require training individual models for different subtasks, which limits the flexibility of the models.
+This predicament prompts a quest for a more adaptable GISR framework that can dynamically accommodate various SR scenarios with greater flexibility.
+
+
+
+Recently, the concept of all-in-one frameworks has gained significant traction in the field of image restoration (IR), with a growing body of research exploring this direction~\cite{allinone_li2022all,compare_allinone_wang2024gridformer}. These frameworks are designed to employ a single unified model to address multiple IR tasks, such as image dehazing, denoising, and deraining. While these tasks typically involve images of the same modality, enabling the sharing of features and representations across tasks, the situation in GISR is considerably more complex. In GISR, the input usually consists of two images from different modalities. The heterogeneity between these modalities introduces a substantial domain gap, making it significantly more challenging to design a single network capable of generalizing across diverse GISR subtasks.
+
+To empirically demonstrate this challenge, we employ a standard encoder-decoder backbone network to independently perform several GISR subtasks. The network accepts as input the concatenation of an upsampled LR target image and its corresponding HR guidance image, and outputs the SR target image. 
+As illustrated in Figure~\ref{fig:Channel Feature Analysis}, we analyze the $L_2$ norm distributions of feature maps across selected channels in the encoder stage. The results reveal a high degree of task-specific variation in feature activations, indicating that features extracted from different GISR subtasks exhibit significant independence. This observation suggests that when a unified network is used to handle multiple GISR subtasks, the variation in input modalities can cause interference among tasks, ultimately hampering the network’s ability to achieve optimal performance across all subtasks.
+Based on this analysis, two critical challenges must be addressed in designing a unified GISR framework:\textit{
+(a) how to effectively process and integrate input images from varying modalities;
+(b) how to mitigate or eliminate negative interference between different GISR subtasks within a single network architecture.}
+
+ 
+To tackle the aforementioned challenges, we introduce a novel and unified framework for GISR, termed MAG-Net, as illustrated in Figure~\ref{fig:First}(b). MAG-Net is the first all-in-one GISR model that effectively integrates multiple GISR subtasks, including pansharpening, MR image SR, and depth image SR, within a single, flexible architecture.
+At the core of MAG-Net lies a shared encoder-decoder backbone, upon which we design two key modules: the Multi-modal Prompt Generation Module (MPGM) and the Multi-Guidance Routing Module (MGRM).
+The MPGM dynamically generates task-aware multi-modal prompts by jointly encoding the input image pair and pre-defined textual guidance that encapsulates task-specific description. These prompts act as implicit instructions, encoding both visual characteristics and textual information from the input images and task descriptions. By bridging image and text modalities, the prompts help disambiguate task-specific objectives and suppress cross-task interference, thereby enabling effective task differentiation within the unified model.
+To further leverage the guidance information encoded by the MPGM, we propose the MGRM, which adopts a Mixture-of-Experts (MoE) mechanism. This module dynamically routes intermediate features through specialized expert branches, selected adaptively based on the characteristics of the guided input. This enables MAG-Net to selectively activate and exploit the most relevant knowledge for each task, ensuring both generality and specialization.
+
+
+%To handle these challenges, we propose a novel \textbf{All-in-One GISR model} termed as MAG-Net, which unifies various GISR tasks under a single framework, as shown in Figure~\ref{fig:First}(b). Based on the main encoder-decoder backbone network, we design two plug-in modules, a Multi-modal Prompt Generation Module (MPGM) and a Multi-Guidance Routing Module (MGRM). The MPGM dynamically generates multi-modal prompt according to the input image pair and pre-defined task-relevant guided textual information. The prompt serving as task-specific instructions, incorporate image-domain details from the source images and semantic information from the task description, thus is crucial for distinguishing between tasks and isolating interference. To fully exploit the guidance information provided by MPGM and the guided images, we propose the MGRM which takes advantage from Mixture-of-Experts (MoE) techniques to adaptively selects appropriate experts for the intermediate features of different tasks based on diverse guidance information.
+
+The main contributions of our proposed method are concluded as follows.
+\begin{enumerate}
+\item \textbf{A unified all-in-one GISR framework:} We propose the first unified architecture that accommodates a diverse set of GISR subtasks. By bridging the modality and task gaps, MAG-Net offers a generalizable solution for cross-domain guided SR.
+\item \textbf{A novel task-aware guidance mechanism:} Our design incorporates multi-modal prompt generation and adaptive feature routing through MoE, enabling precise, task-specific feature enhancement. 
+\item \textbf{Extensive evaluation with state-of-the-art results:} We conduct comprehensive experiments on representative GISR benchmarks, demonstrating that MAG-Net consistently achieves superior performance compared to existing methods.
+\end{enumerate}
+
+\begin{figure}[!t] % htbp 表示放置的位置
+    \centering
+    \includegraphics[width=0.5\textwidth]{pic/channel_feature.png} % 图片路径和大小
+    \caption{The distribution of $L_2$ norm for the feature maps of some channels when using an encoder-decoder network architecture to handle different GISR subtasks. Note that each subtask is trained individually.}
+    \label{fig:Channel Feature Analysis} % 添加标签用于引用
+\end{figure}
+
+\section{Related Work}
+%\subsection{Single Image Super-Resolution (SISR)}
+%SISR methods have been extensively researched in recent decades, and they can be broadly categorized into three groups: interpolation-based approaches, reconstruction-based approaches, and learning-based approaches~\cite{zhou2023memory}. Interpolation-based techniques~\cite{sun2008image, sanchez2008noniterative, zhou2012interpolation} are quick but suffer from issues such as aliasing and blurring, limiting their ability to generate high-quality HR images. Reconstruction-based methods~\cite{yang2013fast, dong2012nonlocally, mallat2010super} employ image priors to regularize the ill-posed reconstruction problem, yielding images with intricate texture details. However, modelling the complex context of natural images with image priors poses a challenging task. Learning-based methods~\cite{yang2010image, yang2012coupled, lim2017enhanced, zhang2018image} utilize machine learning techniques to acquire the intricate mapping between LR and HR images from data.
+
+%Recently, deep learning models have garnered significant attention due to their outstanding performance among learning-based methods for SISR tasks. The first deep learning approach for image SR was SRCNN~\cite{dong2015image}, featuring a simple structure that enables direct learning of an end-to-end mapping between the LR and HR images. Following that, a sequence of deep learning methods of SISR concentrates on increasing the network complexity by increasing the network depth. However, increasing the depth of CNN architectures introduces numerous training challenges, which have been alleviated through the incorporation of residual learning~\cite{kim2016accurate, kim2016deeply, mao2016image}. Additionally, the utilization of residual learning has been implemented to capture inter-layer dependencies~\cite{tai2017memnet, zhang2018residual}. Over the past few years, deep unfolding has been employed in SISR, where Liu et al.~\cite{liu2016robust} designed a neural network to calculate latent representations of the LR/HR image utilizing LISTA~\cite{gregor2010learning}. LISTA is a neural network that carries out steps akin to the Iterative Soft Thresholding Algorithm (ISTA)~\cite{daubechies2004iterative}.%
+
+
+\subsection{Guided image super-resolution}
+%Traditional GISR methods involves joint or guided filtering, where a filter is devised to utilize the guidance image as a prior, transferring structural details. Various joint filtering techniques have been proposed~\cite{tomasi1998bilateral,kopf2007joint}.  In the past few years, deep learning based GISR methods have been proposed.  A low-cost convolution method, ightNet~\cite{pansharpening_chen2022spanconv}, can achieve competitive results with fewer parameters and better generalization. MC-VarNet~\cite{MRI_lei2023decomposition} is a variational network guided by an optimization algorithm to address multi-contrast MR image SR and reconstruction. DSR~\cite{depth_yuan2023structure} addresses structural distortion and edge noise by using a cross-modality flow-guided upsampling network. However, these methods only focus on individual GISR task. Although Zhou et al. propose MADUNet~\cite{allinone_zhou2023memory} which can be applied to various GISR subtasks, it still performs training and testing separately for each task. 
+
+Compared with SISR, GISR incorporates an additional HR guidance image to improve the resolution of an LR target image by transferring structural information from the HR guidance image. A commonly adopted method in GISR is based on joint or guided filtering, where the filter leverages the guidance image as a prior to transmit structural cues. Several joint filtering approaches have been introduced~\cite{tomasi1998bilateral, kopf2007joint}. Nonetheless, when structural discrepancies exist between the HR guidance image and the target image, misalignment issues may occur. To handle this, an alternative method~\cite{shen2015multispectral} constructs an explicit mapping function to model structural differences across different image modalities. Song et al.~\cite{song2019multimodal} proposed a GISR framework based on coupled dictionary learning, which learns modality-specific dictionaries in a sparse feature domain to reduce inconsistency between the target and guidance images. However, such methods typically rely on manually designed objective functions, which might not sufficiently represent the natural image priors.
+
+With the advent of deep learning in computer vision, CNNs have been increasingly applied to GISR. For instance, Yang et al.\cite{yang2017pannet} proposed the PanNet architecture, incorporating upsampled LRMS images into the output, and training the model in the high-pass filtering domain. Wang et al.\cite{wang2021ssconv} introduced a multiscale U-shaped CNN (MUCNN) that uses a specially designed spectral-to-spatial convolution (SSconv) for upsampling. These CNN-based methods are entirely data-driven and require a large volume of paired training examples.
+
+To enable end-to-end learning for GISR, deep unrolling networks have been widely explored. Marivani et al.\cite{marivani2020multimodal} introduced a multimodal unfolding network inspired by convolutional sparse coding. Deng et al.\cite{deng2019deep} proposed a joint multi-modal dictionary learning (JMDL) method and later unfolded it via ISTA. Yang et al.\cite{yang2022memory} incorporated memory mechanisms and dual priors into a conditional unfolding framework. Lei et al.\cite{lei2023deep} designed MC-CDic under an optimization-guided fidelity framework. Zhou et al.~\cite{allinone_zhou2023memory} further combined MAP estimation with LSTM-based persistent memory to model structural similarities and reduce information loss.
+
+%To harness the full potential of end-to-end learning, deep unrolling networks have been applied for solving GISR tasks. Adopting a model-based deep learning approach, Marivani et al.\cite{marivani2020multimodal} developed a multi-modal deep unfolding network that mimics iterative steps similar to convolutional sparse coding with auxiliary information. Deng et al.\cite{deng2019deep} first introduced a joint multi-modal dictionary learning (JMDL) algorithm to learn dependencies between modalities, and later unfolded it into a deep neural network based on the iterative shrinkage-thresholding algorithm (ISTA). Yang et al.\cite{yang2022memory} introduced a memory-augmented deep conditional unfolding network that integrates both a denoising prior and a non-local auto-regression prior. Lei et al.\cite{lei2023deep} proposed the multi-contrast convolutional dictionary (MC-CDic) model, guided by an optimization framework with a carefully tailored data fidelity term. Zhou et al.~\cite{allinone_zhou2023memory} formulated a maximum a posteriori (MAP) estimation model that captures both local and global priors through non-local structural similarities between the HR target and guidance images. Additionally, they incorporated a persistent memory mechanism using LSTM units in both image and feature domains to mitigate information loss and enhance representation capabilities in GISR tasks.
+
+
+\subsection{All-in-one image restoration}
+Recently, all-in-one natural IR has emerged as a prominent approach, which aims to tackle various restoration tasks simultaneously by leveraging a single universal model.
+%The survey by Jiang et al.~\cite{allinone_jiang2024survey} provides a comprehensive taxonomy of these methods, categorizing them into ten representative frameworks based on their architectural designs.
+%The groundbreaking work of AirNet~\cite{allinone_li2022all} has achieved blind all-in-one IR by employing contrastive learning techniques to extract degradation representations from corrupted images. These representations are then utilized to restore the clean image effectively. Building on this, IDR~\cite{zhang2023ingredient} introduced an ingredient-oriented approach that models various degradations based on underlying physical principles, achieving superior performance through a two-stage restoration process. PromptIR~\cite{allinone_potlapalli2024promptir} has introduced a novel drop-in prompt block that dynamically adjusts input feature representations to enhance IR. This innovation has led to significant improvements in denoising, deraining, and dehazing tasks. Following this prompt-based paradigm, PIP~\cite{li2023prompt} developed a Prompt-In-Prompt learning framework that incorporates both degradation-aware and basic restoration prompts, while  Chen et al.~\cite{allinone_chen2024learning} have introduced a low-level vision model utilizing a visual task prompt framework to excel in a wide range of 30 diverse image processing tasks. Similarly, MPerceiver~\cite{ai2024multimodal} proposed a multimodal prompt learning approach that harnesses the generative priors of stable diffusion to enhance adaptiveness and generalizability across restoration tasks. Cao et al.~\cite{allinone_cao2025grids} have proposed GRIDS, a method for multiple-degradation IR. This approach groups degradations statistically, employs mix-training for efficient model learning, and adaptively selects optimal models to achieve effective restoration results.  In the medical imaging domain, AMIR~\cite{yang2024all} demonstrated the effectiveness of task-adaptive routing strategies for MRI image SR, CT denoising, and PET synthesis, while ProCT~\cite{ma2023prompted} introduced view-aware prompting techniques for incomplete-view CT reconstruction.
+
+Recent advances in all-in-one image restoration (IR) have leveraged contrastive learning, prompt-based paradigms, and multimodal priors to enhance generalization across diverse degradations. AirNet~\cite{allinone_li2022all} pioneers blind all-in-one IR via contrastive degradation representation learning. Extending this, IDR~\cite{zhang2023ingredient} models degradations through physical priors in a two-stage framework. PromptIR~\cite{allinone_potlapalli2024promptir} and PIP~\cite{li2023prompt} introduce dynamic and nested prompt modules to boost restoration adaptivity, while Chen et al.\cite{allinone_chen2024learning} generalize prompt learning to 30+ tasks via a visual task prompt framework. MPerceiver\cite{ai2024multimodal} further explores multimodal prompting using generative priors from stable diffusion. GRIDS~\cite{allinone_cao2025grids} proposes group-wise training and adaptive routing for multi-degradation IR. In medical imaging, AMIR~\cite{yang2024all} and ProCT~\cite{ma2023prompted} employ prompt routing and view-aware strategies for various modality-specific tasks.
+
+
+%Complementary to this, MEASNet~\cite{allinone_yu2024multi} introduced a multi-expert adaptive selection mechanism that leverages both local and global image features to handle diverse degradation scenarios.
+
+Recent advances have also explored the integration of large vision-language models, with DA-CLIP~\cite{luo2023controlling} demonstrating how pretrained CLIP models can be adapted for universal IR, and Perceive-IR~\cite{zhang2025perceive} utilizing DINO-v2-based guidance modules to enhance restoration quality through semantic prior.
+TextPromptIR~\cite{yan2025textual} leveraged textual prompts to guide the restoration process through natural language instructions.
+
+
+%Recently, all-in-one natural IR has emerged as a prominent approach, which aims to tackle various restoration tasks simultaneously by leveraging a single universal model. The groundbreaking work of AirNet~\cite{allinone_li2022all} has achieved blind all-in-one image restoration by employing contrastive learning techniques to extract degradation representations from corrupted images. These representations are then utilized to restore the clean image effectively. PromptIR~\cite{allinone_potlapalli2024promptir} has introduced a novel drop-in prompt block that dynamically adjusts input feature representations to enhance image restoration. This innovation has led to significant improvements in denoising, deraining, and dehazing tasks. Chen et al.~\cite{allinone_chen2024learning} have introduced a low-level vision model utilizing a visual task prompt framework (VPIP) to excel in a wide range of 30 diverse image processing tasks. Cao et al.~\cite{allinone_cao2025grids} have proposed GRIDS, a method for multiple-degradation image restoration. This approach groups degradations statistically, employs mix-training for efficient model learning, and adaptively selects optimal models to achieve effective restoration results.
+\begin{figure*}[htpb] % htbp 表示放置的位置
+    \centering
+    \includegraphics[width=0.95\textwidth]{pic/model1.png} % 图片路径和大小
+    \caption{(a) Overview of the proposed MAG-Net; (b) detailed architecture of the Multi-modal Prompt Generation Module (MPGM); (c) detailed architecture of the Multi-Guidance Routing Module (MGRM).}
+    \label{fig:Model} % 添加标签用于引用
+\end{figure*}
+
+\section{Proposed Method}
+To systematically and comprehensively introduce our proposed method, we first present the overall pipeline, followed by a detailed explanation of the two efficient modules: MPGM and MGRM.
+
+
+\subsection{Overall pipeline}
+As depicted in Figure~\ref{fig:Model} (a), the proposed MAG-Net takes as input an LR target image $I_{l} \in \mathbb{R}^{H\times W\times C_1}$ and an HR guidance image $G_{h}\in \mathbb{R}^{sH\times sW\times C_2}$, where $H$ and $W$ represent the height and width of the target image, $s$ denotes the SR scaling factor, and $C_1$, $C_2$ indicate the number of channels in the target and guidance images, respectively. These inputs are jointly utilized to reconstruct a high-quality SR target image by leveraging both intra-modal and cross-modal information.
+
+Inspired by Restormer~\cite{allinone_zamir2022restormer}, we adopt a 4-level hierarchical encoder-decoder architecture as the backbone of MAG-Net. Each level of the hierarchy contains a stack of Transformer Blocks, with the number of blocks gradually increasing from the top (shallow) to the bottom (deep) levels. This design ensures a favorable trade-off between representational power and computational efficiency, allowing deeper layers to capture more complex and fine-grained features.
+To address the issue of task interference in multi-task GISR settings, we embed a dedicated \textbf{Multi-Guidance Routing Module (MGRM)} at each encoder level. The MGRM adaptively routes the intermediate features through specialized processing pathways according to task-specific guidance, thereby enabling more accurate and discriminative feature learning across heterogeneous GISR tasks.
+To further enhance the guidance capability of MGRM, we propose the \textbf{Multi-modal Prompt Generation Module (MPGM)}. This module dynamically generates a task-aware Multi-Modal Prompt (MMP) by jointly analyzing the paired input images and integrating pre-defined task-relevant textual descriptions. The MMP encodes both task-specific visual cues and predefined textural descriptions, acting as explicit instructions that inform the routing decisions made by the MGRM.
+By injecting the MMP into each level of the encoder, the model is better equipped to distinguish among different GISR subtasks and allocate features to specialized paths accordingly, thereby improving the overall adaptability and performance of the network in diverse GISR scenarios.
+
+
+
+%As depicted in Figure~\ref{fig:Model}, the proposed MAG-Net takes as input the LR target image $I_{l} \in \mathbb{R}^{H\times W\times C_1}$ and the HR guidance image $G_{h}\in \mathbb{R}^{sH\times sW\times C_2}$, where $H$ and $W$ respectively represent the height and width of $I_{l}$, $s$ denotes the SR ratio, $C_1$ and $C_2$ indicate the number of channels for the target and guided images, respectively. We choose a 4-level hierarchical encoder-decoder architecture as our network backbone. Each level incorporates multiple Transformer Blocks (TB), with the block count progressively increasing from the top level to the bottom level to uphold computational efficiency. To mitigate task interference, we introduce a Multi-Guidance Routing Module (MGRM) at each encoder level to guide the model in allocating different paths for different tasks. Furthermore, to dynamically provide more precise task-specific instructions for MGRM, we also design a Multi-modal Prompt Generation Module (MPGM), which thoroughly explores the characteristics among different GISR tasks by using multi-model source images and pre-defined task-relevant textual information to generate a task-specific Multi-Modal Prompt (MMP).   The generated MMP helps the MGRM better understand the current task and select distinct paths for customized processing.
+
+\subsection{Multi-modal prompt generation module}
+As illustrated in Figure~\ref{fig:Model}(a), we first extract shallow features from the two input images using separate encoders consisting of three convolutional layers, denoted as $E_H(\cdot)$ and $E_L(\cdot)$, respectively.
+These features are then fused and refined through task-specific branches to produce modality-aware intermediate representations. 
+The generation of HR and LR features, denoted as $F_H$ and $F_L$, can be formulated as:
+\begin{equation}
+    F_H = \mathrm{Conv_{1\times 1}}([\mathrm{E_H}(G_h); \mathrm{E_L}(I_l)]),
+\end{equation}
+\begin{equation}
+    F_L = \mathrm{Conv_{1\times 1}}([\mathrm{E_H}(G_h); \mathrm{E_L}(I_l)]),
+\end{equation}
+where $[\cdot\,;\cdot]$ denotes the channel-wise concatenation operation. The concatenated features are then refined by a $1 \times 1$ convolution layer followed by a non-linear activation function (e.g., ReLU). These blocks are designed to filter and project the concatenated features into task-relevant embedding spaces.
+To further integrate information from both the HR and LR branches, we construct a fused representation $F_I$ by aggregating $F_H$ and $F_L$ through an additional $1\times 1$ convolution:
+\begin{equation}
+    F_I = \mathrm{Conv_{1\times 1}}([F_H; F_L]),
+\end{equation}
+This fusion ensures that both high-frequency details from the HR image and structural cues from the LR image are effectively combined to serve as a rich visual prompt foundation.
+
+Unlike natural image restoration tasks, GISR tasks exhibit greater heterogeneity, not only in terms of image modality (e.g., remote sensing, medicine, depth) but also in spatial resolution ratios and input channel dimensions. This diversity introduces challenges for a unified model to correctly differentiate and specialize its behavior for each task. Therefore, it becomes essential to inject more comprehensive, task-specific guidance into the network.
+Inspired by the role of textual instructions in human-computer interaction, and the success of multi-modal models such as CLIP~\cite{radford2021learning}, we incorporate textual task descriptions to augment the visual features. For each GISR subtask, we manually design concise, guided textual prompts that encode relevant information such as task type, SR ratio, or sensor characteristics (e.g., satellite type in pansharpening). Examples of these task descriptions are illustrated in Figure~\ref{fig:First}.
+By feeding these textual descriptions into a pre-trained CLIP text encoder, we obtain a task-aware text embedding $F_T$ that complements the fused visual representation $F_I$. We then integrate the visual and textual information by feature modulation and skip connection as follows:
+\begin{equation}
+    F_{IT} = F_I + (F_I \odot \mathrm{FC_1}(F_T) + \mathrm{FC_2}(F_T)),
+\end{equation}
+where $\odot$ denotes the Hadamard product, enabling fine-grained interaction between the visual and textual modalities, $\mathrm{FC_1}$ and $\mathrm{FC_2}$ are two fully connected layers, respectively.  
+
+Finally, we use the joint representation $F_{IT}$ to generate a set of weights for dynamically combining elements from a learnable dictionary. The resulting MMP, denoted as $P_{mm}$, is computed as:
+\begin{equation}
+    P_{mm} = \sum_{i=1}^{N} w_i D_i, \qquad w_i = \text{Softmax}(\text{GAP}(F_{IT})),
+\end{equation}
+where $\text{GAP}(\cdot)$ represents global average pooling, and $D = [D_1, D_2, \ldots, D_N]$ is a shared, learnable dictionary designed to encode a set of reusable, task-agnostic feature atoms. The generated MMP $P_{mm}$ acts as a task-specific prompt that effectively guides downstream modules such as MGRM.
+
+\subsection{Multi-guidance routing module}
+To mitigate task interference among multiple GISR subtasks, we aim to allocate conflicting representations to distinct parameter subspaces, without introducing significant computational or memory overhead. \textit{Mixture-of-Experts} (MoE)~\cite{moe_original} provides an elegant mechanism for this by dynamically selecting expert subnetworks for each input, thereby enhancing model capacity and specialization while keeping the overall cost manageable.
+However, conventional MoE architectures typically rely solely on input token representations for routing decisions, neglecting crucial task-specific contextual signals. In the context of GISR, such an approach is suboptimal because the inputs span diverse modalities, each with unique structural and semantic characteristics. Furthermore, the HR guidance image $G_h$ contains auxiliary information that is essential for interpreting and differentiating tasks.
+
+To address these limitations, we enhance the routing mechanism by incorporating both the learned task-specific MMP $P_{mm}$ produced by MPGM and the guided features $F_G$ extracted from $G_h$,
+\begin{equation}
+    F_G = \mathrm{E_G}(G_h), 
+\end{equation}
+where $E_G(\cdot)$ denotes an shallow encoder consisting of three convolutional layer.
+This enriched guidance enables the routing function to make more informed and discriminative decisions. The routing procedure, as illustrated in Figure~\ref{fig:Model}(b), is formalized as follows:
+\begin{equation}
+    F' = \mathrm{Conv}_{1\times 1}([F_L ; F_G]),
+\end{equation}
+\begin{equation}
+    F_{\text{gate}} = \mathrm{Conv}_{1\times 1}(F' \odot \mathrm{Conv}_{1\times 1}([F' ; P_{mm}])),
+\end{equation}
+where $F_L$ denotes the intermediate feature from $L$-th encoder level, and $\odot$ represents the Hadamard product. The $1 \times 1$ convolution layers serve as channel-wise fusion operations, integrating task-relevant and spatially-aware information into the gating signal $F_{\text{gate}}$.
+
+Next, we use $F_{\text{gate}}$ to compute the expert selection weights and perform a sparse, weighted aggregation of the outputs from a pool of experts to generate the enhanced feature $\hat{F}_L$:
+\begin{equation}
+    \hat{F}_L = \sum_{j=1}^{M} \mathrm{K}(F_{\text{gate}})_j \cdot \mathrm{E}_j(F_L),
+\end{equation}
+where $\mathrm{K}(\cdot)$ denotes a Top-$K$ gating function that selects the $K$ most relevant experts based on $F_{\text{gate}}$, setting the remaining weights to zero to ensure sparsity. In our implementation, $M$ and $K$ are set to 4 and 2, respectively. Each expert $\mathrm{E}_j$ is implemented as a lightweight multilayer perceptron (MLP) that transforms $F_L$ into a task-specialized representation.
+
+To improve load balancing and avoid over-reliance on a small subset of experts, we incorporate auxiliary load balancing loss terms $L_{Balance}$. In addition, to further reduce computational burden and minimize potential interference among experts, we adopt a distributed processing strategy, where each selected expert operates on a portion of $F_L$ rather than the entire feature map.
+
+ 
+
+
+\subsection{Loss function}
+The total loss of the proposed MAG-Net can be expressed as:
+\begin{equation}
+L = L_{1} + \gamma L_{Balance},
+\end{equation}
+where $L_{1}$ represents the reconstruction loss, measuring the difference between the reconstructed HR image and the ground truth (GT); $L_{Balance}$ is the regularization component designed for MoE to ensuring that the same small group of experts is not repeatedly selected. The parameter $\gamma$ serves as a balancing weight.
+
+\section{Experiments}
+To validate the effectiveness of the proposed MAG-Net, we conduct comprehensive experiments on three common GISR subtasks, i.e, pansharpening, depth image SR and MR image SR, from both quantitative and qualitative perspectives.
+
+\subsection{Datasets and evaluation metrics}
+For pansharpening task, we conduct experiments on datasets from three satellites: QuickBird (QB), WorldView-4 (WV4), and GaoFen-1 (GF1)~\cite{pansharpening_dataset_meng2020large}. To facilitate performance evaluation, we crop the original image pairs into small samples. Each training pair contains a 128$\times$128$\times$1 PAN image, a 32$\times$32$\times$4 LRMS image as well as a 128$\times$128$\times$4 GT (HRMS) image.
+Corresponding image quality assessment (IQA) metrics include the relative dimensionless global error in synthesis (ERGAS), peak signal-to-noise ratio (PSNR), and spectral angle mapper(SAM). 
+For depth image SR task, we select widely-recognized benchmark NYU v2~\cite{depth_dataset_silberman2012indoor} dataset, which contains 1449 pairs of RGB-D images. Following the settings of ~\cite{depth_kim2021deformable}, we use 1000 pairs for training and the remaining 449 pairs for testing, with SR ratio setting to 4, 8, and 16, respectively.
+The RMSE metric is used to quantify the difference between the SR image and the GT image.
+For MR image SR task, we conduct evaluations with three different SR ratio on the BraTS dataset, which includes 285 multi-contrast MR volumes. For each volume, we select the middle 100 slices and exclude slices with insufficient content information. In total, we use 20,480 slices for training and 2,320 slices for testing. Besides, we evaluate the results using peak signal-to-noise ratio (PSNR) and structural similarity index measure (SSIM) to measure the quality of the SR results.
+
+\subsection{Training details}
+All experiments are conducted using PyTorch on a single NVIDIA RTX 3090 GPU. We use the Adam optimizer (batch size 4) with an initial learning rate of 4e-4, decayed via cosine annealing. The encoder-decoder backbone includes Transformer blocks with depths $L_1=3$, $L_2=4$, $L_3=4$, and $L_4=5$.
+In the all-in-one setting, the model is jointly trained on multiple datasets, with epoch length matched to the smallest dataset (1000 images for depth SR). Datasets are reshuffled after each epoch, and training runs for 500 epochs, including ablations.
+In the one-by-one setting, the model is trained separately for each task, each for 500 epochs.
+
+
+%All experiments are implemented using the PyTorch framework and executed on a single NVIDIA RTX 3090 GPU. The initial learning rate is set to 4e-4 and gradually decayed following a cosine annealing schedule. We adopt the Adam optimizer with a batch size of 4 to update model parameters efficiently. The number of Transformer blocks in the encoder-decoder backbone is set to $L_1 = 3$, $L_2 = 4$, $L_3 = 4$, and $L_4 = 5$ for the four hierarchical levels, respectively. For the all-in-one setting, we jointly train the model on multiple datasets corresponding to different tasks. To ensure balanced training, the length of each epoch is aligned with the smallest dataset (1000 images for depth image SR task). After processing each epoch, all datasets are reshuffled, allowing sufficient exposure to each task across multiple training cycles. All models under this setting are trained for a total of 500 epochs, including those used in ablation studies. For the one-by-one setting, we train the model separately for each subtask. Each training session is run independently and terminated after 500 epochs.
+
+% \subsection{Comparison with state-of-the-arts}
+% To validate the proposed MAG-Net, we conduct qualitative and quantitative comparisons with several SOTA methods under two settings: all-in-one and one-by-one.
+
+\subsection{Evaluations under all-in-one setting}
+Since we are the first to propose the all-in-one approach for the GISR task, there are no directly comparable methods. Therefore, we adapt several popular all-in-one IR methods to fit the GISR task. The selected comparison methods include: PromptIR~\cite{allinone_potlapalli2024promptir}, Gridformer~\cite{compare_allinone_wang2024gridformer}, Transweather~\cite{compare_allinone_valanarasu2022transweather}, CAPTNet~\cite{compare_allinone_gao2024prompt} and AdaIR~\cite{compare_allinone_cui2024adair}. 
+Specifically, we concatenate the upsampled LR image with the guidance image as the input for these methods, and the output is the corresponding SR result.
+Notably, MAG-Net achieves the smallest model size among all benchmark methods, highlighting its efficiency in parameter usage.
+\input{tables/comparison_allinone}
+
+\begin{figure}[htb] % htbp 表示放置的位置
+    \centering
+    \includegraphics[width=0.5\textwidth]{pic/compare_pan.png} % 图片路径和大小
+    \caption{Visual comparison and error maps of pansharpening under all-in-one setting.}
+    \label{fig:compare_pan1} % 添加标签用于引用
+\end{figure}
+\begin{figure}[htb] % htbp 表示放置的位置
+    \centering
+    \includegraphics[width=0.5\textwidth]{pic/compare_mri.png} % 图片路径和大小
+    \caption{Visual comparison and error maps of MR image SR under all-in-one setting.}
+    \label{fig:compare_mri1} % 添加标签用于引用
+\end{figure}
+\begin{figure}[!htb] % htbp 表示放置的位置
+    \centering
+    \includegraphics[width=0.5\textwidth]{pic/compare_depth.png} % 图片路径和大小
+    \caption{Visual results and error maps of depth image SR under all-in-one setting.}
+    \label{fig:compare_depth1} % 添加标签用于引用
+\end{figure}
+
+The quantitative results of all-in-one approaches are reported in Table~\ref{tab:all_in_one}. As shown in the table, our method consistently outperforms all competing methods across various tasks and settings, demonstrating superior performance on all evaluation metrics. For instance, on the WV4 dataset for the pansharpening task, our method achieves a PSNR that is 0.55 dB higher than the second-best method, AdaIR, indicating a substantial improvement in reconstruction fidelity.
+Among the baseline methods, AdaIR and PromptIR generally occupy the second and third ranks, respectively. However, both methods exhibit marked performance imbalances across different tasks and datasets. For example, although AdaIR performs competitively on the WV4 and QB datasets in the pansharpening task, it falls behind PromptIR on the GF1 dataset, suggesting that its generalization ability across domains is limited. This inconsistency underscores the difficulty of designing unified models that are equally effective across diverse task distributions.
+In contrast, the remaining three methods show significantly inferior performance compared to ours in nearly all subtasks and datasets. These results further validate the effectiveness and robustness of our proposed approach, particularly in multi-task scenarios where maintaining consistent performance across heterogeneous data sources is critical.
+
+
+Qualitative comparisons are illustrated in~\cref{fig:compare_pan1,fig:compare_mri1,fig:compare_depth1}, where we not only display the SR results of all competing methods but also provide corresponding error maps, either for full images or zoomed-in regions of interest. 
+Overall, our proposed MAG-Net consistently produces SR results that are visually closer to the GT images, with significantly better preservation of fine details and fewer artifacts.
+Specifically, in the pansharpening task shown in~\cref{fig:compare_pan1}, the error maps reveal that TransWeather suffers from severe spectral distortion, particularly in QB and WV4 cases. Other methods also exhibit varying degrees of spatial or spectral inconsistencies, indicating limitations in their ability to preserve both structure and spectrum.
+In the MR image SR task presented in~\cref{fig:compare_mri1}, CAPTNet shows noticeable loss of anatomical details, such as blurred tissue boundaries and weakened contrast. Note that AdaIR performs relatively better in this task, possibly due to its use of frequency-domain operations that are more compatible with the Fourier nature of k-space MRI data.
+For the depth image SR task in~\cref{fig:compare_depth1}, our MAG-Net clearly excels, especially around challenging object boundaries such as thin structures or occlusion edges. MAG-Net demonstrates a strong capability to accurately recover depth discontinuities and fine structures.
+This improvement can be largely attributed to our effective integration of the guidance image, which allows the network to better align structural cues and preserve task-relevant spatial information during SR process.
+
+ 
+
+
+\subsection{Evaluations under one-by-one setting}
+
+We further compare the proposed MAG-Net with SOTA single-task methods across three representative tasks. 
+The quantitative results are summarized in~\cref{table:comparison_onebyone}, and the corresponding qualitative comparisons are illustrated in ~\cref{fig:compare_pan2,fig:compare_mri2,fig:compare_depth2}.
+
+%\input{tables/pansharpening}
+%\input{tables/MRI}
+%\input{tables/depth}
+
+\begin{figure}[htp]
+    \centering
+    \includegraphics[width=0.5\textwidth]{pic/compare_single_pan.png}
+    \caption{Visual comparison results and error maps of pansharpening under one-by-one setting.}
+    \label{fig:compare_pan2}
+\end{figure}
+
+\begin{figure}[htp]
+    \centering
+    \includegraphics[width=0.5\textwidth]{pic/compare_single_mri.png}
+    \caption{Visual comparison results and error maps of MR image SR under one-by-one setting.}
+    \label{fig:compare_mri2}
+\end{figure}
+ 
+
+\begin{figure}[htp]
+    \centering
+    \includegraphics[width=0.5\textwidth]{pic/compare_single_depth.png } 
+    \caption{Visual comparison results and error maps of depth image SR under one-by-one setting.}
+    \label{fig:compare_depth2}
+\end{figure}
+
+\paragraph{Pansharpening}
+For this task, we include the following strong baselines: AWFLN~\cite{compare_pan_lu2023awfln}, DISPNet~\cite{compare_pan_jia2018dispnet}, LAGConv~\cite{compare_pan_jin2022lagconv}, M3DNet~\cite{compare_pan_li2020m3dnet}, FusionMamba~\cite{compare_pan_peng2024fusionmamba}, and Dif-Pan~\cite{compare_pan_cao2024diffusion}. 
+As shown in Table~\ref{table:comparison_onebyone}, our MAG-Net and Dif-Pan consistently outperform other methods across the three benchmark datasets. While MAG-Net slightly lags behind Dif-Pan on the QB and GF1 datasets, it delivers competitive results on WV4 and even surpasses other approaches by a large margin in several metrics.
+Figure~\ref{fig:compare_pan2} presents the visual comparisons. The error maps clearly demonstrate that DISPNet and LAGConv suffer from severe spectral distortions and fail to recover spatial details effectively. Although M3DNet and AWFLN maintain relatively good spectral consistency, they still lose considerable structural information. In contrast, our MAG-Net achieves a better balance between spatial and spectral fidelity, resulting in visually superior pansharpened outputs with fewer artifacts and sharper textures.
+
+\paragraph{MR image SR}
+The single-task baselines considered for this task include MGDUN~\cite{compare_mri_yang2023mgdun}, DuDoNet~\cite{compare_mri_dudonet_lei2024joint}, MINet~\cite{compare_mri_pang2020multi}, MASA~\cite{compare_mri_lu2021masa}, McMRSR~\cite{compare_mri_li2022transformer}, and SANet~\cite{compare_mri_feng2024exploring}. 
+According to Table~\ref{table:comparison_onebyone}, our MAG-Net achieves the best performance across all three SR scales, demonstrating its strong ability to restore high-quality anatomical details from LR MR images.
+Visual comparisons in Figure~\ref{fig:compare_mri2} further verify these findings. Among all methods, our MAG-Net and DuDoNet yield the most accurate results compared to the ground truth. In particular, MAG-Net produces sharper tissue boundaries and better preserves subtle structures, offering slight but consistent improvements over DuDoNet.
+
+\paragraph{Depth image SR}
+We compare MAG-Net with several SOTA depth SR methods, including GeoDSR~\cite{compare_depth_geodsr}, DAGF~\cite{compare_depth_dagf:zhong2023deep}, AHMF~\cite{compare_depth_ahmf:zhong2021high}, DCTNet~\cite{compare_depth_dctnet:zhao2022discrete}, DKN~\cite{depth_kim2021deformable}, and SGNet~\cite{depth_wang2024sgnet}. 
+As reported in Table~\ref{table:comparison_onebyone}, our MAG-Net ranks second only to SGNet in the 4$\times$ SR setting, while achieving the best performance for more challenging 8$\times$ and 16$\times$ scenarios.
+Figure~\ref{fig:compare_depth2} provides a visual comparison for the depth image SR task. It is evident that MAG-Net produces the most faithful restorations, especially around complex object boundaries. The reconstructed depth maps are more accurate and exhibit fewer artifacts, highlighting the advantages of our model in capturing fine geometric details.
+
+
+
+%We present some visual results of pansharpening (Figure~\ref{fig:compare_pan}), MR image SR (Figure~\ref{fig:compare_mri}), and depth image SR (Figure~\ref{fig:compare_depth}) under one-by-one setting. Compared to other single-task methods, our proposed MAG-Net continues to demonstrate outstanding SR results, achieving results that closely resemble the ground truth (GT).
+
+\begin{table*}[htbp]
+\caption{One-by-one GISR metric results across three tasks. Best performances are \textbf{bolded} and second best are \underline{underlined}.}
+\renewcommand{\arraystretch}{1.1}
+\fontsize{7}{9}\selectfont
+\centering
+\begingroup
+\setlength{\tabcolsep}{1.2pt}
+\begin{tabular}{>{\centering\arraybackslash}p{1.7cm}|>{\centering\arraybackslash}p{0.65cm}>{\centering\arraybackslash}p{0.55cm}>{\centering\arraybackslash}p{0.55cm}|>{\centering\arraybackslash}p{0.65cm}>{\centering\arraybackslash}p{0.55cm}>{\centering\arraybackslash}p{0.55cm}|>{\centering\arraybackslash}p{0.65cm}>{\centering\arraybackslash}p{0.55cm}>{\centering\arraybackslash}p{0.55cm}!{{\vrule width 1.2pt}}>{\centering\arraybackslash}p{1.2cm}|>{\centering\arraybackslash}p{0.7cm}>{\centering\arraybackslash}p{0.7cm}|>{\centering\arraybackslash}p{0.7cm}>{\centering\arraybackslash}p{0.7cm}|>{\centering\arraybackslash}p{0.7cm}>{\centering\arraybackslash}p{0.7cm}!{{\vrule width 1.2pt}}>{\centering\arraybackslash}p{1.1cm}|>{\centering\arraybackslash}p{0.6cm}|>{\centering\arraybackslash}p{0.6cm}|>{\centering\arraybackslash}p{0.6cm}}
+\hline\hline
+\multicolumn{10}{c!{{\vrule width 1.2pt}}}{\textbf{Pansharpening}} & \multicolumn{7}{c!{{\vrule width 1.2pt}}}{\textbf{MR Image SR}} & \multicolumn{4}{c}{\textbf{Depth Image SR}} \\
+\hline
+\multirow{2}{*}{Method} & \multicolumn{3}{c|}{WV4} & \multicolumn{3}{c|}{QB} & \multicolumn{3}{c!{{\vrule width 1.2pt}}}{GF1} & \multirow{2}{*}{Method} & \multicolumn{2}{c|}{2×} & \multicolumn{2}{c|}{4×} & \multicolumn{2}{c!{{\vrule width 1.2pt}}}{8×} & \multirow{2}{*}{Method} & \multicolumn{1}{c|}{4×} & \multicolumn{1}{c|}{8×} & \multicolumn{1}{c}{16×} \\
+\cline{2-10}\cline{12-17}\cline{19-21}
+& {\fontsize{5}{5}\selectfont PSNR} & {\fontsize{5}{5}\selectfont SAM} & {\fontsize{5}{5}\selectfont ERGAS} & {\fontsize{5}{5}\selectfont PSNR} & {\fontsize{5}{5}\selectfont SAM} & {\fontsize{5}{5}\selectfont ERGAS} & {\fontsize{5}{5}\selectfont PSNR} & {\fontsize{5}{5}\selectfont SAM} & {\fontsize{5}{5}\selectfont ERGAS} & & {\fontsize{5}{5}\selectfont PSNR} & {\fontsize{5}{5}\selectfont SSIM} & {\fontsize{5}{5}\selectfont PSNR} & {\fontsize{5}{5}\selectfont SSIM} & {\fontsize{5}{5}\selectfont PSNR} & {\fontsize{5}{5}\selectfont SSIM} & & {\fontsize{5}{5}\selectfont RMSE} & {\fontsize{5}{5}\selectfont RMSE} & {\fontsize{5}{5}\selectfont RMSE} \\
+\midrule
+{\fontsize{6}{6}\selectfont AWFLN} & 42.13 & 1.23 & 0.98 & 49.14 & 0.82 & 0.60 & 49.70 & 0.62 & 0.64 & {\fontsize{6}{6}\selectfont MGDUN} & 40.97 & 0.9893 & 35.34 & 0.9632 & 32.61 & 0.9361 & {\fontsize{6}{6}\selectfont GeoDSR} & 1.42 & 2.62 & 4.86 \\
+{\fontsize{6}{6}\selectfont DISPNet} & 40.79 & 1.43 & 1.15 & 48.18 & 0.93 & 0.70 & 46.61 & 0.86 & 0.84 & {\fontsize{6}{6}\selectfont MINet} & 38.84 & 0.9788 & 35.62 & 0.9625 & 32.38 & 0.9335 & {\fontsize{6}{6}\selectfont DAGF} & 1.36 & 2.87 & 6.06 \\
+{\fontsize{6}{6}\selectfont LAGConv} & 41.54 & 1.33 & 1.07 & 47.89 & 0.96 & 0.71 & 47.66 & 0.79 & 0.79 & {\fontsize{6}{6}\selectfont MASA} & 40.37 & 0.9883 & 34.93 & 0.9590 & 30.41 & 0.8954 & {\fontsize{6}{6}\selectfont AHMF} & 1.40 & 2.89 & 5.64 \\
+{\fontsize{6}{6}\selectfont M3DNet} & 42.27 & 1.20 & 0.97 & 49.45 & 0.80 & 0.58 & 49.80 & 0.62 & 0.64 & {\fontsize{6}{6}\selectfont McMRSR} & 40.96 & 0.9893 & 35.20 & 0.9596 & 30.55 & 0.8985 & {\fontsize{6}{6}\selectfont DCTNet} & 1.59 & 3.16 & 5.84 \\
+{\fontsize{6}{6}\selectfont FusionMamba} & 42.84 & \underline{1.15} & \underline{0.92} & 49.50 & 0.81 & 0.59 & 50.79 & 0.55 & 0.60 & {\fontsize{6}{6}\selectfont SANet} & 42.36 & 0.9881 & 36.56 & 0.9583 & 33.53 & 0.9419 & {\fontsize{6}{6}\selectfont DKN} & 1.62 & 3.26 & 6.51 \\
+{\fontsize{6}{6}\selectfont Dif-Pan} & \textbf{43.89} & \textbf{1.03} & \textbf{0.83} & \textbf{50.22} & \textbf{0.72} & \textbf{0.53} & \textbf{52.33} & \textbf{0.46} & \textbf{0.51} & {\fontsize{6}{6}\selectfont DuDoNet} & \underline{44.96} & \underline{0.9919} & \underline{38.99} & \underline{0.9744} & \underline{35.43} & \underline{0.9533} & {\fontsize{6}{6}\selectfont SGNet} & \textbf{1.10} & \underline{2.44} & \underline{4.77} \\
+{\fontsize{6}{6}\selectfont MAG-Net} & \underline{43.76} & \textbf{1.03} & \textbf{0.83} & \underline{49.89} & \underline{0.75} & \underline{0.54} & \underline{51.95} & \underline{0.47} & \underline{0.55} & {\fontsize{6}{6}\selectfont MAG-Net--} & \textbf{45.03} & \textbf{0.9934} & \textbf{39.02} & \textbf{0.9780} & \textbf{35.62} & \textbf{0.9580} & {\fontsize{6}{6}\selectfont MAG-Net} & \underline{1.21} & \textbf{2.40} & \textbf{4.39} \\
+\hline\hline
+\end{tabular}
+\endgroup
+\label{table:comparison_onebyone}
+\end{table*}
+
+
+
+
+\subsection{Ablation studies and discussions}
+%In order to further illustrate the effectiveness of the proposed MAG-Net, we conduct extensive ablation analysis. 
+Our ablation experiments are conducted simultaneously on multiple GISR tasks. Due to space limitations, one IQA metric is selected for each task to measure the SR performance. The pansharpening and MR image SR tasks both use the PSNR metric, while the depth image SR task use the RMSE metric. 
+%Additional ablation analyses on dataset diversity and the position of the MGPM module can be found in the supplementary material. 
+
+ 
+\paragraph{Impact of the two key modules}
+To further validate the effectiveness of the two core components, i.e., MPGM and MGRM, we conduct an ablation study under identical experimental settings. Specifically, we compare four configurations: (1) a baseline where both modules are removed, (2) a variant with MGRM removed, (3) a variant with MPGM removed, and (4) the full MAG-Net model with both modules enabled. The corresponding results are summarized in Table~\ref{table:ablation_module}.
+
+\input{tables/ablation_modules}
+
+
+From the comparison, it is evident that each component plays a vital role in improving the performance of the overall model. Removing either MPGM or MGRM leads to a noticeable performance drop, while removing both results in the most significant degradation. This demonstrates that the combination of MPGM and MGRM allows MAG-Net to dynamically select task-specific feature processing paths based on the characteristics of the source images and the task description. By enabling this adaptive routing mechanism, the model effectively reduces task interference and promotes better multi-task generalization.
+
+To further support this conclusion, we visualize the task prompts generated by the MPGM using t-SNE, as shown in Figure~\ref{fig:Prompt}. Figure~\ref{fig:Prompt}(a) illustrates the prompts from all GISR subtasks across all datasets. The visualization reveals that the learned prompts form well-separated clusters corresponding to different tasks, indicating that the MPGM effectively captures discriminative and task-aware representations.
+%Figure~\ref{fig:Prompt}(b) focuses on the prompts from the MR image SR task under three different SR ratios. 
+Although the inter-task variation appears less pronounced in Figure~\ref{fig:Prompt}(a), Figure~\ref{fig:Prompt}(b) shows that prompts from the MR image SR task under three different SR ratios still exhibit clear distinctions. 
+The reason lies in that these intra-task differences are smaller compared to the separability between different tasks.
+These prompt embeddings subsequently serve as meaningful guidance for the MGRM, enabling it to route features through the most suitable expert branches for each specific task and dataset.
+
+
+\begin{figure}[htbp]
+    \centering
+    \subfloat[]{
+        \includegraphics[height=3.15cm]{pic/tSNE1.png}
+        \label{fig:tsne1}
+    }
+    \hfill
+    \subfloat[]{
+        \includegraphics[height=3.15cm]{pic/tSNE2.png}
+        \label{fig:tsne2}
+    }
+    \caption{t-SNE visualization of MMP from (a) different tasks; (b) different SR ratios for MR image SR task}
+    \label{fig:Prompt}
+\end{figure}
+
+
+
+
+
+\paragraph{Impact of task combinations}
+We conduct experiments by training our proposed MAG-Net on various combinations of GISR tasks to assess its robustness in multi-task learning scenarios. The quantitative results are reported in Table~\ref{table:ablation_task}. Notably, even as the number of simultaneously learned tasks increases, MAG-Net maintains competitive performance without suffering from significant degradation. 
+This robustness can be largely attributed to our multi-modal prompting strategy and the task-adaptive routing mechanism, both of which are explicitly designed to reduce task interference by encouraging the separation of task-relevant features. 
+\input{tables/ablation_task_combinations}
+
+Interestingly, in several task combination settings, the model even surpasses the performance of the corresponding single-task versions. This suggests that MAG-Net is not only effective in isolating cross-task interference, but also capable of leveraging complementary information across tasks to achieve mutual enhancement. 
+%Such positive transfer further demonstrates the capacity of our framework to uncover and exploit latent synergies between different GISR modalities, making it a promising solution for unified GISR.
+
+
+\paragraph{Impact of dataset diversity}
+%In our experiments, each GISR subtask is trained using three datasets or SR ratios (treated as distinct datasets). To assess the effect of dataset quantity, we also train MAG-Net with one or two datasets per subtask, as shown in Table~\ref{table:ablation_dataset_number}. Results consistently show that more datasets lead to better SR performance, indicating enhanced representation capability from increased diversity. This suggests that domain gaps within a task are relatively small—much smaller than those across tasks—as further evidenced by the overlapping clusters in the t-SNE plot (Figure~\ref{fig:Prompt}). Thus, adding datasets does not introduce notable interference, but instead helps the model learn more robust, task-specific features for improved generalization in real-world applications.
+
+In our experiments, for each GISR subtask, we select three different datasets or SR ratios to train the model. For the sake of clarity, we treat different SR ratios as distinct datasets. To investigate the impact of the number of datasets per task on model performance, we train MAG-Net using one or two datasets for each subtask, and report the results in Table~\ref{table:ablation_dataset_number}. From the results, we observe a consistent trend: as the number of datasets increases, the SR performance across nearly all tasks improves accordingly. This demonstrates that including more diverse datasets within the same subtask category can effectively enrich the model's representation capability. This finding also suggests that the domain gap among different datasets for the same task is relatively small, especially when compared to the domain gap across different tasks. This observation is further supported by the t-SNE visualization in Figure~\ref{fig:Prompt}, where samples from the same task but different datasets tend to form overlapping clusters, indicating shared structural and spectral characteristics.  Therefore, incorporating additional datasets does not introduce significant learning interference. On the contrary, it enables the model to better learn robust, task-relevant features, ultimately leading to superior SR performance across diverse real-world scenarios.
+\input{tables/ablation_dataset diversity}
+ 
+\paragraph{Impact of guiding modality}
+In our framework, the generation of multi-modal prompts leverages not only the visual information extracted from the guidance images but also the textual information embedded in the task-specific  descriptions. To assess the individual and joint contributions of these two guiding modalities, we conduct an ablation study, and the results are summarized in Table~\ref{table:ablation_modality}.
+It is evident that using only a single modality or no guiding information significantly limits the model’s ability to differentiate among various GISR tasks. In such cases, the generated prompts tend to exhibit a bias toward certain tasks, resulting in performance imbalances where some tasks are well-optimized while others suffer from suboptimal restoration quality. %Moreover, removing both modalities of guidance information leads to the worst performance, confirming their necessity in prompt generation.
+In contrast, when both image and text modalities are jointly utilized for prompt generation, the model is able to construct more discriminative and task-aware prompts. 
+Consequently, the SR performance of all tasks is improved in a more balanced and consistent manner.
+%These findings highlight the importance of multi-modal conditioning in prompt learning, and further demonstrate the strength of our proposed MAG-Net in handling diverse and complex GISR tasks under a unified framework.
+\input{tables/ablation_modality_combinations}
+
+
+%In the generation of multi-modal prompts, we utilized not only the information from the guidance images but also the text information related to the task descriptions. To validate the importance of these two modalities in generating prompts, we conducted an ablation analysis, and the experimental results are shown in Table~\ref{table:ablation_modality}. It can be observed that when not using guided information or only using one modality of guided information, the multiple GISR tasks cannot be well distinguished in prompts, leading to a bias towards certain tasks where some perform well while others do not. When generating prompts using guided information from both modalities simultaneously, it is possible to better avoid task interference, enabling each task to achieve better SR performance.
+
+
+
+
+
+
+
+\paragraph{The position of the routing module}
+Based on the observations in Figure~\ref{fig:Channel Feature Analysis}, we found that the feature independence across different GISR subtasks is more pronounced in the encoder than in the decoder. This suggests that task-specific characteristics are more effectively distinguishable at earlier stages of the network. Motivated by this insight, we strategically place our routing module, MGPM, within the encoder to better exploit this inherent feature separation and perform task-adaptive modulation at an early stage.
+
+
+\input{tables/ablation_position_of_routing   }
+To validate the effectiveness of this design, we compare two model variants: one with MGPM applied only in the decoder, one with MGPM applied in both the encoder and decoder. The results are presented in Table~\ref{table:ablation_routing_position}. As shown, placing MGPM in the encoder alone leads to noticeably better SR performance compared to applying it solely in the decoder, confirming the advantage of early-stage feature routing.
+Although incorporating MGPM into both the encoder and decoder yields marginally higher performance, the improvement is relatively minor and comes at the cost of increased model complexity and parameter count. Given the trade-off between accuracy and efficiency, we ultimately adopt the configuration where MGPM is placed only in the encoder. 
+
+
+\begin{figure}[htpb] % htbp 表示放置的位置
+    \centering
+    \includegraphics[width=0.45\textwidth]{pic/training_metrics.png} % 图片路径和大小
+    \caption{Performance trends of different tasks across training epochs. Pansharpening and MR image SR are assessed using PSNR (higher values indicate better performance), whereas depth image SR is evaluated based on RMSE (lower values indicate better performance).}
+    \label{fig:training_metrics} % 添加标签用于引用
+\end{figure}
+
+\section{Conclusion and Limitation}
+In this paper, we propose MAG-Net, the first all-in-one Guided Image Super-Resolution (GISR) model that unifies multiple GISR subtasks within a single, coherent framework. To achieve task-specific adaptability and cross-modal generalization, we introduce two key modules: the \textit{Multi-modal Prompt Generation Module} (MPGM), which dynamically generates task-aware prompts from the input image pair and predefined textual descriptions, and the \textit{Multi-Guidance Routing Module} (MGRM), which leverages Mixture-of-Experts (MoE) techniques to adaptively route features based on the provided guidance. Extensive experiments across various GISR benchmarks validate the effectiveness of these modules and demonstrate that MAG-Net consistently outperforms existing approaches under both all-in-one and subtask-specific training settings.
+
+Despite the promising results, our method still faces certain challenges. As shown in Figure~\ref{fig:training_metrics}, during training, particularly in the later stages, the optimization process tends to favor the depth image SR task, leading to performance degradation in the other subtasks. This imbalance highlights a common issue in multi-task learning, where dominant tasks may overshadow others during joint optimization. In future work, we plan to explore more advanced task balancing strategies, such as dynamic loss weighting or gradient normalization techniques, to further enhance the fairness and robustness of the unified GISR framework.
+
+
+
+ 
+
+
+\bibliographystyle{IEEEtran}
+\bibliography{AIO-GISR}
+\end{document}
+
+

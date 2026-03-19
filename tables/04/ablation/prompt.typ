@@ -1,5 +1,5 @@
 #figure(
-  caption: [不同模态（Text 与 Image）对联合任务性能的消融实验结果分析],
+  caption: [Text 与 Image对联合任务性能的消融实验结果分析。],
   kind: table,
 )[
   #set text(size: 9pt)
@@ -60,4 +60,4 @@
     // 底部粗线
     table.hline(stroke: 1.2pt),
   )
-] <tab:ablation_prompt>
+] <ablation_prompt>

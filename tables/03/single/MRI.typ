@@ -39,4 +39,4 @@
       // 底部横线
       table.hline(stroke: 1.2pt),
     )
-  ] <tab:VPNet_one-by-one_mri>
+  ] <VPNet_one-by-one_mri>

@@ -1,5 +1,5 @@
 #figure(
-  caption: [不同 all-in-one 方法在 Depth Image SR 任务上的对比结果，最优结果用 #strong[粗体]表示，次优结果用 #underline[下划线]表示],
+  caption: [不同一体化方法在深度图超分任务上的对比结果，最优结果用 #strong[粗体]表示，次优结果用 #underline[下划线]表示。],
   kind: table,
 )[
   #set text(size: 9pt)
@@ -34,4 +34,4 @@
     
     table.hline(stroke: 1.2pt),
   )
-] <tab:MAGNet_all-in-one_depth>
+] <MAGNet_all-in-one_depth>

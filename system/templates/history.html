@@ -1,0 +1,83 @@
+{% extends 'base.html' %}
+
+{% block title %}历史记录 - 一体化引导式图像超分系统{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2><i class="bi bi-clock-history me-2"></i>历史操作记录</h2>
+        <a href="{{ url_for('demo') }}" class="btn btn-primary"><i class="bi bi-plus-lg me-1"></i>新建任务</a>
+    </div>
+
+    <div class="card shadow-sm">
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle table-sm">
+                    <thead class="table-light">
+                        <tr>
+                            <th scope="col">批次ID</th>
+                            <th scope="col">源目录</th>
+                            <th scope="col">目标目录</th>
+                            <th scope="col">任务</th>
+                            <th scope="col">倍率</th>
+                            <th scope="col">时间 (Start/End)</th>
+                            <th scope="col">状态 / 平均指标</th>
+                            <th scope="col" class="text-end">操作</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for item in history %}
+                        <tr>
+                            <td><span class="badge bg-light text-dark border">{{ item.id }}</span></td>
+                            <td>
+                                <div class="text-truncate" style="max-width: 150px;" title="{{ item.source_dir }}">
+                                    <i class="bi bi-folder2-open me-1 text-warning"></i>{{ item.source_dir }}
+                                </div>
+                            </td>
+                            <td>
+                                <div class="text-truncate" style="max-width: 150px;" title="{{ item.target_dir }}">
+                                    <i class="bi bi-folder2 me-1 text-primary"></i>{{ item.target_dir }}
+                                </div>
+                            </td>
+                            <td><span class="badge bg-secondary">{{ item.task }}</span></td>
+                            <td>{{ item.scale }}</td>
+                            <td>
+                                <small class="d-block text-muted">{{ item.start_time }}</small>
+                                <small class="d-block text-muted">{{ item.end_time }}</small>
+                            </td>
+                            <td>
+                                {% if item.status == 'Completed' %}
+                                    <span class="badge bg-success rounded-pill mb-1">Completed</span>
+                                    <div class="small fw-bold text-success">{{ item.metrics }}</div>
+                                {% else %}
+                                    <span class="badge bg-danger rounded-pill">Failed</span>
+                                {% endif %}
+                            </td>
+                            <td class="text-end">
+                                <button class="btn btn-sm btn-outline-primary mb-1" title="查看详情"><i class="bi bi-card-list"></i></button>
+                                <button class="btn btn-sm btn-outline-secondary mb-1" title="导出报告"><i class="bi bi-file-earmark-pdf"></i></button>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            
+            <!-- Pagination -->
+            <nav aria-label="Page navigation" class="mt-4">
+                <ul class="pagination justify-content-center">
+                    <li class="page-item disabled">
+                        <a class="page-link" href="#" tabindex="-1" aria-disabled="true">Previous</a>
+                    </li>
+                    <li class="page-item active"><a class="page-link" href="#">1</a></li>
+                    <li class="page-item"><a class="page-link" href="#">2</a></li>
+                    <li class="page-item"><a class="page-link" href="#">3</a></li>
+                    <li class="page-item">
+                        <a class="page-link" href="#">Next</a>
+                    </li>
+                </ul>
+            </nav>
+        </div>
+    </div>
+</div>
+{% endblock %}

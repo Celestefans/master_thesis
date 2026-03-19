@@ -1,0 +1,193 @@
+{% extends 'base.html' %}
+
+{% block title %}在线演示 - 一体化引导式图像超分系统{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="row mb-4">
+        <div class="col-12">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="{{ url_for('index') }}">首页</a></li>
+                    <li class="breadcrumb-item active" aria-current="page">在线演示</li>
+                </ol>
+            </nav>
+            <h2 class="mb-3">图像修复演示</h2>
+            <p class="text-muted">上传低分辨率图像并配置参数，查看系统的增强效果。</p>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- 左侧控制面板 -->
+        <div class="col-lg-4 mb-4">
+            <div class="card shadow-sm">
+                <div class="card-header bg-white fw-bold">
+                    <i class="bi bi-sliders me-2"></i>配置面板
+                </div>
+                <div class="card-body">
+                    <form id="processForm">
+                        <div class="mb-3">
+                            <label class="form-label">算法策略</label>
+                            <div class="btn-group w-100" role="group" id="strategyGroup">
+                                <input type="radio" class="btn-check" name="strategy" id="strategyAIO" autocomplete="off" value="aio" checked>
+                                <label class="btn btn-outline-primary" for="strategyAIO">一体化通用模型 (All-in-One)</label>
+
+                                <input type="radio" class="btn-check" name="strategy" id="strategySpecific" autocomplete="off" value="specific">
+                                <label class="btn btn-outline-primary" for="strategySpecific">任务专用模型 (Task-Specific)</label>
+                            </div>
+                        </div>
+
+                        <div class="mb-3" id="aioModelContainer">
+                            <label for="aioModelSelect" class="form-label">选择通用模型</label>
+                            <select class="form-select" id="aioModelSelect">
+                                <option value="magnet" selected>MAG-Net</option>
+                                <option value="vpnet">VP-Net</option>
+                                <option value="promptir">PromptIR</option>
+                                <option value="airnet">AirNet</option>
+                                <option value="gridformer">GridFormer</option>
+                                <option value="transweather">TransWeather</option>
+                                <option value="captnet">CAPTNet</option>
+                                <option value="adair">AdaIR</option>
+                            </select>
+                        </div>
+
+                        <div class="mb-3 d-none" id="specificModelContainer">
+                            <label for="specificModelSelect" class="form-label">选择专用模型</label>
+                            <select class="form-select" id="specificModelSelect">
+                                <!-- Options will be populated based on task type -->
+                            </select>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="taskType" class="form-label">任务类型</label>
+                            <select class="form-select" id="taskType">
+                                <option value="pansharpening">全色锐化 (Pansharpening)</option>
+                                <option value="depth">深度图超分 (Depth SR)</option>
+                                <option value="mri">磁共振超分 (MRI SR)</option>
+                            </select>
+                            <div class="form-text">选择要执行的图像复原任务。</div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="scaleFactor" class="form-label">缩放倍率</label>
+                            <div class="btn-group w-100" role="group" id="scaleGroup">
+                                <input type="radio" class="btn-check" name="scale" id="x2" autocomplete="off" value="2x">
+                                <label class="btn btn-outline-primary" for="x2">2x</label>
+
+                                <input type="radio" class="btn-check" name="scale" id="x4" autocomplete="off" value="4x" checked>
+                                <label class="btn btn-outline-primary" for="x4">4x</label>
+
+                                <input type="radio" class="btn-check" name="scale" id="x8" autocomplete="off" value="8x">
+                                <label class="btn btn-outline-primary" for="x8">8x</label>
+                                
+                                <input type="radio" class="btn-check" name="scale" id="x16" autocomplete="off" value="16x">
+                                <label class="btn btn-outline-primary" for="x16">16x</label>
+                            </div>
+                        </div>
+
+                        <div class="mb-3" id="promptContainer">
+                            <label class="form-label">上传图像</label>
+                            <div class="upload-area border rounded p-4 text-center cursor-pointer" id="dropZone">
+                                <i class="bi bi-cloud-upload display-6 text-muted"></i>
+                                <p class="mb-0 mt-2 text-muted small">点击或拖拽上传</p>
+                                <input type="file" id="fileInput" class="d-none" accept="image/*">
+                            </div>
+                            <div id="fileInfo" class="mt-2 small text-success d-none">
+                                <i class="bi bi-check-circle-fill me-1"></i> <span id="fileName">image.png</span>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="promptInput" class="form-label">语义提示 (自动生成)</label>
+                            <textarea class="form-control bg-light" id="promptInput" rows="2" readonly>Pansharpening for satellite imagery, scale factor 4x</textarea>
+                        </div>
+
+                        <div class="d-grid">
+                            <button type="button" class="btn btn-primary" id="processBtn" disabled>
+                                <span class="spinner-border spinner-border-sm d-none me-1" role="status" aria-hidden="true"></span>
+                                开始处理
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- 系统状态模拟 -->
+            <div class="card shadow-sm mt-3">
+                <div class="card-body py-2">
+                    <div class="d-flex justify-content-between align-items-center small">
+                        <span class="text-muted">Model Status:</span>
+                        <span class="badge bg-success">Ready</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 右侧展示区域 -->
+        <div class="col-lg-8">
+            <div class="card shadow-sm h-100">
+                <div class="card-header bg-white d-flex justify-content-between align-items-center">
+                    <span class="fw-bold"><i class="bi bi-eye me-2"></i>效果对比</span>
+                    <div class="btn-group btn-group-sm">
+                        <button type="button" class="btn btn-outline-secondary active" id="viewSideBySide">并排</button>
+                        <button type="button" class="btn btn-outline-secondary" id="viewOverlay">叠加</button>
+                    </div>
+                </div>
+                <!-- 展示区域主体 -->
+                <div class="card-body bg-light d-flex align-items-center justify-content-center" style="min-height: 500px; position: relative;">
+                    
+                    <!-- 初始空状态 -->
+                    <div id="emptyState" class="text-center text-muted d-none">
+                        <i class="bi bi-image display-1 opacity-25"></i>
+                        <p class="mt-3">请在左侧上传图像并开始处理</p>
+                    </div>
+
+                    <!-- 处理中加载状态 -->
+                    <div id="loadingState" class="text-center d-none">
+                        <div class="spinner-border text-primary" role="status" style="width: 3rem; height: 3rem;">
+                            <span class="visually-hidden">Loading...</span>
+                        </div>
+                        <p class="mt-3 text-muted">正在进行语义路由与图像重建...</p>
+                        <div class="progress mt-2" style="width: 200px; height: 5px;">
+                            <div class="progress-bar progress-bar-striped progress-bar-animated" role="progressbar" style="width: 100%"></div>
+                        </div>
+                    </div>
+
+                    <!-- 结果展示 -->
+                    <div id="resultState" class="w-100 h-100">
+                        <div class="row g-0 h-100">
+                            <!-- Input Image -->
+                            <div class="col-6 border-end position-relative overflow-hidden result-container d-flex align-items-center justify-content-center bg-light">
+                                <span class="badge bg-secondary position-absolute top-0 start-0 m-2 z-1">Input (LR)</span>
+                                <!-- 使用 CSS 强制像素化显示，模拟低分辨率 -->
+                                <img src="{{ url_for('static', filename='images/demo-pansharpening.png') }}" id="inputDisplay" class="img-fluid object-fit-contain" alt="Input" style="image-rendering: pixelated; transform: scale(1.0); transform-origin: center center; max-height: 100%; max-width: 100%;">
+                            </div>
+                            <!-- Output Image -->
+                            <div class="col-6 position-relative overflow-hidden result-container d-flex align-items-center justify-content-center bg-light">
+                                <span class="badge bg-primary position-absolute top-0 start-0 m-2 z-1">Output (SR)</span>
+                                <img src="{{ url_for('static', filename='images/demo-pansharpening.png') }}" id="outputDisplay" class="img-fluid object-fit-contain" alt="Output" style="transform: scale(4.0); transform-origin: center center; max-height: 100%; max-width: 100%;">
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+                <div class="card-footer bg-white text-muted small">
+                    <div class="row">
+                        <div class="col-4">
+                            <!-- 隐藏 PSNR -->
+                            <!-- <strong>PSNR:</strong> <span id="metricPSNR">--</span> dB -->
+                        </div>
+                        <div class="col-4">
+                             <!-- 隐藏 SSIM -->
+                            <!-- <strong>SSIM:</strong> <span id="metricSSIM">--</span> -->
+                        </div>
+                        <div class="col-4 text-end">
+                            <i class="bi bi-clock"></i> Time: <span id="metricTime">0.217</span>s
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

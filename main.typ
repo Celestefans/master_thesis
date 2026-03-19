@@ -20,30 +20,32 @@
   // doctype: "bachelor",  // "bachelor" | "master" | "doctor", 文档类型，默认为硕士生 master
   doctype: "master",
   // degree: "academic",  // "academic" | "professional", 学位类型，默认为学术型 academic
-  degree: "academic",
+  degree: "professional",
   // anonymous: true,  // 盲审模式
   twoside: false, // 双面模式，会加入空白页，便于打印。双面模式下 front matter 部分页码始终在右侧。
   // 可自定义字体，先英文字体后中文字体，应传入「宋体」、「黑体」、「楷体」、「仿宋」、「等宽」。
   // fonts: (楷体: ("Times New Roman", "FZKai-Z03S"))
   info: (
     // 如有需要，title 与 department 均支持多行。可以使用 \n 来分行或使用列表。
-    title: ("基于动态路由与多模态提示的一体化引导图像超分辨率研究"),
-    title-en: "Research on All-in-One Guided Image Super-Resolution Based on Dynamic Routing and Multi-modal Prompting",
+    title: ("基于动态路由与多模态提示\n的一体化引导式图像超分"),
+    title-en: "All-in-One Guided Image Super-Resolution Based on Dynamic Routing and Multi-modal Prompting",
     grade: "2026",
     student-id: "51265901080",
-    author: "王君",
-    author-en: "Jun Wang",
+    author: "",
+    author-en: "",
     department: ("计算机科学与技术学院"),
     department-en: "School of Computer Science and Technology",
     // 专业 / 专业学位类别
-    major: "计算机技术",
+    major: "电子信息",
     major-en: "Computer Science",
 
     // 研究生相关：研究方向 / 专业学位领域
-    field: "图像处理",
+    field: "计算机技术",
     field-en: "Image Processing",
-    supervisor: ("方发明", "教授"),
-    supervisor-en: ("Prof.", "Faming Fang"),
+    // supervisor: ("方发明", "教授"),
+    supervisor: ("", ""),
+    // supervisor-en: ("Prof.", "Faming Fang"),
+    supervisor-en: ("", ""),
     // supervisor-ii: ("王五", "副教授"),
     // supervisor-ii-en: ("Assoc. Prof.", "Wu Wang"),
     submit-date: datetime.today(),
@@ -73,32 +75,38 @@
 )
 
 // 学位论文原创性声明
-#decl-page()
+// #decl-page()
 
 // 答辩委员会页（仅研究生）
-#committee()
+// #committee()
 
 // 前言
 #show: preface
 
 // 中文摘要
 #abstract(
-  keywords: ("引导图像超分辨率", "一体化模型", "动态路由", "多模态融合")
+  keywords: ("引导式图像超分", "一体化模型", "动态路由", "多模态融合")
 )[
-  引导图像超分辨率旨在利用高分辨率的辅助图像（如全色图像、RGB图像等）来提升低分辨率目标图像的空间分辨率，被广泛应用于遥感监测、医学成像及深度估计等领域。然而，现有的引导超分辨率方法主要针对单一特定任务设计，由于不同任务间存在巨大的模态差异和成像机理鸿沟，导致模型在跨任务场景下泛化能力不足，且面临着任务间相互干扰的挑战。为打破“一任务一模型”的传统范式，实现多模态任务的高效协同与通用重建，本文基于提示学习与混合专家机制，提出了层层递进的两种一体化引导图像超分辨率方法，具体如下：
+  引导式图像超分旨在利用高分辨率的辅助图像（如全色图像、RGB图像等）来提升低分辨率目标图像的空间分辨率，被广泛应用于遥感监测、医学成像及深度估计等领域。然而，现有的引导超分辨率方法主要针对单一领域的特定任务设计，由于不同任务间存在巨大的模态差异和成像机理鸿沟，导致模型在跨任务场景下泛化能力不足，且面临着任务间相互干扰的挑战。为打破“一任务一模型”的传统范式，实现多模态任务的高效协同与通用重建，深度挖掘不同任务之间的潜在关联，本文基于提示学习与混合专家机制，提出了层层递进的两种一体化引导式图像超分方法，具体如下：
 
-  （1）提出一种基于视觉特征引导的动态路由重建方法。 针对现有单一网络在处理多任务时易产生特征冲突与负迁移，且未能充分解耦不同任务特性的问题，本文提出了一种基于视觉感知的动态路由机制。该方法引入混合专家架构（MoE），构建多引导路由模块，利用图像自身的视觉特征作为隐式引导信号，自适应地激活适合当前输入的专家网络路径。该方法在不显著增加计算成本的前提下，实现了对不同任务特征的差异化处理，有效缓解了多任务学习中的干扰问题，为一体化模型的构建奠定了结构基础。
+  （1）针对一体化引导式图像超分任务中存在的“参数干扰”与“负迁移”问题，提出了一种基于视觉感知动态路由的图像重建方法（VP-Net）。该方法创新性地引入混合专家（MoE）架构，利用引导图像的纹理、边缘等底层视觉特征作为隐式路由信号，动态激活特定任务的专家网络。这种基于视觉特征的“物理隔离”策略，有效缓解了多任务间的优化冲突，在不显著增加计算成本的前提下实现了对不同模态数据的差异化处理。
 
-  （2）提出一种融合文本语义的多模态提示驱动重建方法。 针对仅依赖视觉特征进行引导时对任务意图理解不足，且难以应对复杂模态差异的瓶颈，本文在动态路由的基础上，引入文本语义先验，构建了多模态提示生成模块。该方法创新性地将任务描述文本（Textual Description）映射至语义空间，并与视觉特征深度融合，生成显式的多模态任务指令（Prompts）。这些指令如同“导航员”一般，精准调控网络内部的特征流向与交互方式。实验表明，该方法实现了领域视觉信息与高层语义知识的深度融合，显著提升了模型在全色锐化、深度图超分及磁共振重建等多个任务上的性能与泛化能力。
+  （2）针对纯视觉感知路由机制存在的语义缺失问题，提出了一种融合多模态语义提示的图像重建方法（MAG-Net）。该方法在动态路由架构的基础上引入文本语义先验，设计了多模态提示生成模块（MPGM），利用预训练视觉-语言模型将任务描述转化为高维语义锚点，并注入到路由决策过程中。通过“视觉感知+语义引导”的双重驱动机制，该方法消除了视觉特征的歧义性，实现了像素级与任务级的精细化调控，显著提升了模型在全色锐化、深度图超分及磁共振重建等任务上的性能。
   
-  （3）设计并实现了一体化引导图像超分辨率算法验证与可视化系统。 针对现有理论研究缺乏统一的评估平台，且难以直观展示模型内部动态机制与多任务处理效果的问题，本文基于所提出的算法模型，研发了一个集算法验证、对比分析与可视化展示于一体的实验系统。该系统完整集成了本文提出的两种核心算法，支持多源异构数据的统一接入与一键处理，并特别设计了中间特征（如动态路由分布、多模态提示热力图）的可视化模块。通过该系统，不仅直观验证了所提算法在实际应用场景下的有效性与鲁棒性，也增强了深度模型的透明度与可解释性，为相关技术的工程化应用提供了有力的工具支撑。
+  （3）针对现有先进深度学习模型多以代码脚本形式存在、使用门槛高且难以直接服务于垂直领域专家的问题，设计并实现了一体化引导式图像超分演示系统。该系统基于 B/S 架构，集成了本文提出的核心算法模型，通过封装复杂的模型推理与环境配置过程，为医学、遥感及测绘等领域的非技术用户提供了一个零代码、可视化的高质量图像增强平台，有效缩短了从算法研究到实际应用的距离。
 ]
 
 // 英文摘要
 #abstract-en(
-  keywords: ("To", "be", "or", "not", "to", "be")
+  keywords: ("Guided Image Super-Resolution", "All-in-One Model", "Dynamic Routing", "Multi-modal Fusion")
 )[
-  #lorem(100)
+  Guided image super-resolution aims to enhance the spatial resolution of low-resolution target images using high-resolution auxiliary images (such as panchromatic images, RGB images, etc.), and is widely used in remote sensing monitoring, medical imaging, and depth estimation. However, existing guided super-resolution methods are mainly designed for single specific tasks. Due to the huge modal differences and imaging mechanism gaps between different tasks, models lack generalization capability in cross-task scenarios and face the challenge of mutual interference between tasks. To break the traditional paradigm of "one model for one task" and achieve efficient collaboration and general reconstruction for multi-modal tasks, this thesis proposes two progressive all-in-one guided image super-resolution methods based on prompt learning and Mixture-of-Experts (MoE) mechanism, specifically as follows:
+
+  (1) Addressing the problems of "parameter interference" and "negative transfer" in all-in-one guided image super-resolution tasks, a dynamic routing image reconstruction method based on visual perception (VP-Net) is proposed. This method innovatively introduces the Mixture-of-Experts (MoE) architecture, using low-level visual features such as textures and edges of the guidance image as implicit routing signals to dynamically activate task-specific expert networks. This "physical isolation" strategy based on visual features effectively alleviates optimization conflicts between multi-tasks and achieves differentiated processing of multi-modal data without significantly increasing computational costs.
+
+  (2) Addressing the problems of "visual ambiguity" and "semantic absence" existing in pure visual perception routing mechanisms, an image reconstruction method integrating multi-modal semantic prompts (MAG-Net) is proposed. Based on the dynamic routing architecture, this method introduces textual semantic priors and designs a Multi-modal Prompt Generation Module (MPGM), which utilizes a pre-trained vision-language model to transform task descriptions into high-dimensional semantic anchors and injects them into the routing decision process. Through the dual-drive mechanism of "visual perception + semantic guidance", this method eliminates the ambiguity of visual features, achieves refined control at both pixel and task levels, and significantly improves the model's performance on tasks such as pansharpening, depth map super-resolution, and MRI reconstruction.
+
+  (3) Addressing the problem that existing advanced deep learning models mostly exist in the form of code scripts, have high barriers to use, and are difficult to directly serve experts in vertical fields, an all-in-one guided image super-resolution demonstration system is designed and implemented. Based on the B/S architecture, this system integrates the core algorithm models proposed in this thesis. By encapsulating complex model inference and environment configuration processes, it provides a zero-code, visual, and high-quality image enhancement platform for non-technical users in fields such as medicine, remote sensing, and surveying, effectively shortening the distance from algorithm research to practical application.
 ]
 
 // 目录。preface 中的项目均可以通过可选的 outlined 属性控制是否在目录中显示
@@ -110,12 +118,12 @@
 // 表格目录
 #list-of-tables()
 
-// 符号表
-#notation[
-  / DFT: 密度泛函理论 (Density functional theory)
-  / DMRG: 密度矩阵重正化群密度矩阵重正化群密度矩阵重正化群 (Density-Matrix Reformation-Group)
-  / RAII: 资源获取即初始化 (Resource Acquisition Is Initialization)
-]
+// // 符号表
+// #notation[
+//   / DFT: 密度泛函理论 (Density functional theory)
+//   / DMRG: 密度矩阵重正化群密度矩阵重正化群密度矩阵重正化群 (Density-Matrix Reformation-Group)
+//   / RAII: 资源获取即初始化 (Resource Acquisition Is Initialization)
+// ]
 
 // 正文
 // 可选的，可以通过 #show: mainmatter.with(figure-clearance: 0pt) 来设置浮动图表的间距或其他参数
@@ -166,17 +174,17 @@
 #bilingual-bibliography(full: true, style: "./gb-t-7714-2015-numeric-nosup.csl")
 
 // 致谢
-#acknowledgement[
+// #acknowledgement[
 
-_感谢以下模板提供的参考：_
+// _感谢以下模板提供的参考：_
 
 
-- #link("https://github.com/nju-lug/modern-nju-thesis")[modern-nju-thesis] by #link("https://github.com/Orangex4")[OrangeX4]
-- #link("https://github.com/YijunYuan/ECNU-Undergraduate-LaTeX")[ECNU-Undergraduate-LaTeX] by #link("https://github.com/YijunYuan")[YijunYuan]
-- #link("https://www.overleaf.com/latex/templates/hua-dong-shi-fan-da-xue-shuo-shi-lun-wen-mo-ban-2023/ctvnwyqtsbbz")[华东师范大学硕士论文模板-2023] by ivyee17
-- #link("https://github.com/ECNU-ICA/ECNU_graduation_thesis_template")[ECNU_graduation_thesis_template] by #link("https://github.com/ECNU-ICA")[ECNU-ICA]
-- #link("https://github.com/DeepTrial/ECNU-Dissertations-Latex-Template")[ECNU-Dissertations-Latex-Template] by #link("https://github.com/DeepTrial")[Karl Xing]
-]
+// - #link("https://github.com/nju-lug/modern-nju-thesis")[modern-nju-thesis] by #link("https://github.com/Orangex4")[OrangeX4]
+// - #link("https://github.com/YijunYuan/ECNU-Undergraduate-LaTeX")[ECNU-Undergraduate-LaTeX] by #link("https://github.com/YijunYuan")[YijunYuan]
+// - #link("https://www.overleaf.com/latex/templates/hua-dong-shi-fan-da-xue-shuo-shi-lun-wen-mo-ban-2023/ctvnwyqtsbbz")[华东师范大学硕士论文模板-2023] by ivyee17
+// - #link("https://github.com/ECNU-ICA/ECNU_graduation_thesis_template")[ECNU_graduation_thesis_template] by #link("https://github.com/ECNU-ICA")[ECNU-ICA]
+// - #link("https://github.com/DeepTrial/ECNU-Dissertations-Latex-Template")[ECNU-Dissertations-Latex-Template] by #link("https://github.com/DeepTrial")[Karl Xing]
+// ]
 
 // 手动分页
 #if twoside {
@@ -186,28 +194,25 @@ _感谢以下模板提供的参考：_
 // 附录。可选地，可以重置标题 counter
 #show: appendix.with(reset-counter: false)
 
-= 附录
 
-== 附录子标题
 
-=== 附录子子标题
+= 攻读硕士学位期间科研情况
 
-附录内容，这里也可以加入图片，例如@fig:appendix-img。
+#heading(level: 4, numbering: none)[论文发表情况]
+  - WANG T, #strong[WANG J], YAN Q, et al. Task-aware All-in-one Guided Image Super-Resolution[J]. Pattern Recognition, 2026: 11348（SCI 1区，学生列表一作）
 
-#figure(
-  caption: [图片测试],
-)[
-#image("images/ecnu-emblem.svg", width: 20%)
-] <appendix-img>
 
-= 攻读硕/博士学位期间科研情况
 
-#[
-// Typst 暂不支持多 bibliography 功能。因此需用有序列表来手动列出参考文献。
-#set enum(numbering: "[1]")
-#set par(justify: false)
+#heading(level: 4, numbering: none)[发明专利]
 
-+ J. von Neumann, "First draft of a report on the EDVAC," IEEE Annals of the History of Computing, vol. 15, no. 4, pp. 27–75, 1993, doi: 10.1109/85.238389.
-+ A. M. Turing, "On Computable Numbers, with an Application to the Entscheidungsproblem," Proceedings of the London Mathematical Society, vol. s2-42, no. 1, pp. 230–265, 1937, doi: 10.1112/plms/s2-42.1.230.
-]
+  - 基于多模态提示与自适应路由的一体化引导式图像超分方法。申请号: 2026100492687
+
+#v(1em)
+
+// #[
+//   #set par(justify: false)
+//   #set list(indent: 3em)
+//   - 基于多模态提示与自适应路由的一体化引导式图像超分方法。申请号: 2026100492687
+
+// ]
 

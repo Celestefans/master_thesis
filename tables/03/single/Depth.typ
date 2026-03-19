@@ -38,4 +38,4 @@
     
     table.hline(stroke: 1.2pt),
   )
-] <tab:VPNet_one-by-one_depth>
+] <VPNet_one-by-one_depth>
