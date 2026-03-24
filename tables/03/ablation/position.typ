@@ -1,5 +1,5 @@
 #figure(
-  caption: [不同模块位置（Encoder/Decoder）对各任务性能的影响分析。],
+  caption: [不同模块位置（Encoder/Decoder）对各任务性能的影响分析],
   kind: table,
 )[
   #set text(size: 9pt)

@@ -1,5 +1,5 @@
 #figure(
-  caption: [VPRM 模块有效性消融实验结果分析。],
+  caption: [VPRM 模块有效性消融实验结果分析],
   kind: table,
 )[
   #set text(size: 9pt)

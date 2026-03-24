@@ -1,5 +1,5 @@
 #figure(
-  caption: [不同模块（MPGM 与 MGRM）消融实验结果分析。],
+  caption: [不同模块（MPGM 与 MGRM）消融实验结果分析],
   kind: table,
 )[
   #set text(size: 9pt)

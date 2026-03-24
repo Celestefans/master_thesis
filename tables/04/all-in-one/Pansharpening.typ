@@ -1,5 +1,5 @@
 #figure(
-  caption: [不同一体化方法在全色锐化任务上的对比结果，最优结果用 #strong[粗体]表示，次优结果用 #underline[下划线]表示。],
+  caption: [不同一体化方法在全色锐化任务上的对比结果，最优结果用 #strong[粗体]表示，次优结果用 #underline[下划线]表示],
   kind: table,
 )[
   #set text(size: 9pt)

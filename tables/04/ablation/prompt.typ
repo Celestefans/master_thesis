@@ -1,5 +1,5 @@
 #figure(
-  caption: [Text 与 Image对联合任务性能的消融实验结果分析。],
+  caption: [Text 与 Image对联合任务性能的消融实验结果分析],
   kind: table,
 )[
   #set text(size: 9pt)

@@ -21,16 +21,16 @@ MAG-Net 的核心思想在于引入文本语义先验来修正并增强动态路
 
 
 
-== 方法
+== 算法概述
 
 本章这一部分将详细阐述 MAG-Net 的实施细节。针对多模态一体化任务中纯视觉感知存在的“歧义性”与“语义缺失”问题，MAG-Net 在 VP-Net 的架构基础上进行了语义增强。其核心在于引入了任务描述文本作为显式的先验信息，并通过设计专门的模块将语义特征注入到动态路由的决策过程中，从而实现视觉+语义双重驱动的任务解耦。
 
 === 整体网络架构
 
 #figure(
-  caption: [MAG-Net 网络整体架构示意图。],
+  caption: [MAG-Net 网络整体架构示意图],
 )[
-#image("../images/model_4.png", width: 100%)
+#image("../images/04/model_4.png", width: 100%)
 ] <MAGNet-Ach>
 
 如@fig:MAGNet-Ach 所示，MAG-Net 建立在一个分层的 U 型编码器-解码器骨干网络之上，整体流程包含三个关键阶段：多模态输入编码、基于语义增强的动态特征映射、以及高分辨率图像重建。
@@ -58,9 +58,9 @@ $ I_"SR" = I_"res" + "Upsample"(I_"LR") . $
 MPGM 的处理流程如@fig:MPGM 所示，包含视觉-文本特征提取、跨模态特征调制以及基于字典的提示重构三个阶段。
 
 #figure(
-  caption: [多模态提示生成模块示意图。],
+  caption: [多模态提示生成模块示意图],
 )[
-#image("../images/MPGM.png", width: 95%)
+#image("../images/04/MPGM.png", width: 95%)
 ] <MPGM>
 
 #heading(level: 4, numbering: none)[视觉-语言特征提取]
@@ -97,9 +97,9 @@ $ P_"sem" = sum_(k=1)^K w_k bold(d)_k . $
 如@fig:MGRM 所示，MGRM 在架构上继承了 VPRM 的稀疏门控混合专家设计，保留了混合专家组和稀疏分发与聚合机制。其核心改进在于**门控网络的输入特征构造**，从单纯的视觉感知升级为视觉-语义联合感知。
 
 #figure(
-  caption: [融合多模态提示的动态路由模块示意图。],
+  caption: [融合多模态提示的动态路由模块示意图],
 )[
-#image("../images/MGRM.png", width: 95%)
+#image("../images/04/MGRM.png", width: 95%)
 ] <MGRM>
 
 
@@ -149,26 +149,26 @@ MAG-Net 基于 PyTorch 框架实现，并在单块 NVIDIA RTX 3090 GPU 上进行
 #include "../tables/04/all-in-one/Pansharpening.typ"
 
 #figure(
-  caption: [一体化设置下全色锐化任务的可视化对比与误差图。],
+  caption: [一体化设置下全色锐化任务的可视化对比与误差图],
 )[
-#image("../images/TNNLS/compare_pan.png", width: 105%)
+#image("../images/04/compare_pan.png", width: 105%)
 ] <compare_all-in-one_pansharpening>
 
 
 // all-in-one: MRI
 #include "../tables/04/all-in-one/MRI.typ"
 #figure(
-  caption: [一体化设置下磁共振图像超分任务的可视化对比与误差图。],
+  caption: [一体化设置下磁共振图像超分任务的可视化对比与误差图],
 )[
-#image("../images/TNNLS/compare_mri.png", width: 105%)
+#image("../images/04/compare_mri.png", width: 105%)
 ] <compare_all-in-one_mri>
 
 // all-in-one: Depth
 #include "../tables/04/all-in-one/Depth.typ"
 #figure(
-  caption: [一体化设置下深度图超分任务的可视化对比与误差图。],
+  caption: [一体化设置下深度图超分任务的可视化对比与误差图],
 )[
-#image("../images/TNNLS/compare_depth.png", width: 105%)
+#image("../images/04/compare_depth.png", width: 105%)
 ] <compare_all-in-one_depth>
 
 
@@ -184,9 +184,9 @@ MAG-Net 基于 PyTorch 框架实现，并在单块 NVIDIA RTX 3090 GPU 上进行
 // one-by-one: pansharpening
 #include "../tables/04/one-by-one/Pansharpening.typ"
 #figure(
-  caption: [单任务设置下全色锐化任务的可视化对比与误差图。],
+  caption: [单任务设置下全色锐化任务的可视化对比与误差图],
 )[
-#image("../images/TNNLS/compare_single_pan.png", width: 100%)
+#image("../images/04/compare_single_pan.png", width: 100%)
 ] <compare_one-by-one_pansharpening>
 
 
@@ -196,20 +196,20 @@ MAG-Net 基于 PyTorch 框架实现，并在单块 NVIDIA RTX 3090 GPU 上进行
 // one-by-one: mri
 #include "../tables/04/one-by-one/MRI.typ"
 #figure(
-  caption: [单任务设置下磁共振图像超分任务的可视化对比与误差图。],
+  caption: [单任务设置下磁共振图像超分任务的可视化对比与误差图],
 )[
-#image("../images/TNNLS/compare_single_mri.png", width: 105%)
+#image("../images/04/compare_single_mri.png", width: 105%)
 ] <compare_one-by-one_mri>
 
 **深度图超分任务：**
-针对深度图超分，本文选取了 GeoDSR~@compare_depth_geodsr、DAGF~@zhong2023deep、AHMF~@compare_depth_ahmf:zhong2021high、DCTNet~@compare_depth_dctnet:zhao2022discrete、DKN~@depth_kim2021deformable 和 SGNet~@depth_wang2024sgnet 作为对比基准。由于深度图具有分段平滑的特性，且边缘信息的保持至关重要。如@tbl:MAGNet_one-by-one_depth 所示，MAG-Net 在 RMSE 指标上取得了最低的误差，表明其恢复的深度值最接近真实值。这主要归功于 MAG-Net 的多模态引导机制，它不仅利用了高分辨率 RGB 图像作为结构引导，还通过语义提示强化了模型对深度图几何特性的理解，使其能够更好地区分边缘与平滑区域。@fig:compare_one-by-one_depth 的可视化结果表明，MAG-Net 生成的深度图边缘锐利且内部平滑，显著减少了以往方法中常见的模糊和锯齿效应。
+针对深度图超分，本文选取了 GeoDSR~@compare_depth_geodsr、DAGF~@zhong2023deep、AHMF~@compare_depth_ahmf:zhong2021high、DCTNet~@compare_depth_dctnet:zhao2022discrete、DKN~@depth_kim2021deformable 和 SGNet~@wang2024sgnet 作为对比基准。由于深度图具有分段平滑的特性，且边缘信息的保持至关重要。如@tbl:MAGNet_one-by-one_depth 所示，MAG-Net 在 RMSE 指标上取得了最低的误差，表明其恢复的深度值最接近真实值。这主要归功于 MAG-Net 的多模态引导机制，它不仅利用了高分辨率 RGB 图像作为结构引导，还通过语义提示强化了模型对深度图几何特性的理解，使其能够更好地区分边缘与平滑区域。@fig:compare_one-by-one_depth 的可视化结果表明，MAG-Net 生成的深度图边缘锐利且内部平滑，显著减少了以往方法中常见的模糊和锯齿效应。
 
 // one-by-one: depth
 #include "../tables/04/one-by-one/Depth.typ"
 #figure(
-  caption: [单任务设置下深度图超分任务的可视化对比与误差图。],
+  caption: [单任务设置下深度图超分任务的可视化对比与误差图],
 )[
-#image("../images/TNNLS/compare_single_depth.png", width: 105%)
+#image("../images/04/compare_single_depth.png", width: 105%)
 ] <compare_one-by-one_depth>
 
 
@@ -264,9 +264,9 @@ MAG-Net 基于 PyTorch 框架实现，并在单块 NVIDIA RTX 3090 GPU 上进行
 @fig:tSNE-1 展示了 MAG-Net 在3个GISR任务生成的提示分布情况。从图中可以清晰地观察到，属于同一大类任务的提示向量紧密聚集在一起，而不同任务类别的提示簇之间呈现出显著的分离态势。具体而言，Pansharpening（蓝色系）、Depth SR（红色系）和 MRI SR（绿色系）三个任务的提示分别占据了特征空间的不同区域，且边界清晰。这一结果有力地证明了 MPGM 成功地将自然语言描述中的离散语义映射为了连续且具有判别力的特征表示，使得模型能够明确区分具有不同物理属性和恢复目标的任务，从而为后续 MGRM 中的精确路由提供了可靠的证据。这种基于语义的任务解耦能力，正是 MAG-Net 能够克服 VP-Net 视觉歧义性问题的关键所在。
 
 #figure(
-  caption: [MAG-Net 在所有数据集的所有 GISR 子任务上的提示表示 t-SNE 可视化。],
+  caption: [MAG-Net 在所有数据集的所有 GISR 子任务上的提示表示 t-SNE 可视化],
 )[
-#image("../images/TNNLS/tSNE1.png", width: 70%)
+#image("../images/04/tSNE1.png", width: 70%)
 ] <tSNE-1>
 
 进一步地，为了探究提示对细粒度任务属性的敏感性，本文在@fig:tSNE-2 中专门展示了 MRI 图像超分任务在不同缩放倍率（$2 times$、$4 times$、$8 times$）下的提示分布。可视化结果显示，即便是在同一任务模态内部，对应于不同缩放因子的提示也呈现出了有序的聚类结构。$2 times$、$4 times$ 和 $8 times$ 的提示分别形成了独立的条带状子簇，这表明 MAG-Net 生成的提示不仅编码了高层的任务类别信息（Task Type），还敏锐地捕捉到了底层的操作参数（。这种细粒度的语义感知能力使得模型能够根据具体的退化程度动态调整专家的激活模式，从而在统一框架下实现对多尺度任务的精细化处理。
@@ -277,9 +277,9 @@ MAG-Net 基于 PyTorch 框架实现，并在单块 NVIDIA RTX 3090 GPU 上进行
 
 
 #figure(
-  caption: [MAG-Net 在磁共振图像超分任务中不同超分比率下的提示表示 t-SNE 可视化。],
+  caption: [MAG-Net 在磁共振图像超分任务中不同超分比率下的提示表示 t-SNE 可视化],
 )[
-#image("../images/TNNLS/tSNE2.png", width: 70%)
+#image("../images/04/tSNE2.png", width: 70%)
 ] <tSNE-2>
 
 

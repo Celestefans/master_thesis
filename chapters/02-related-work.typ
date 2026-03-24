@@ -17,7 +17,7 @@ set par(first-line-indent: 0pt)
 #heading(level: 4, numbering: none)[全色锐化]
 全色锐化任务中，$I_"LR"$ 为低分辨率的多光谱图像（Multi-Spectral, MS），包含丰富的光谱信息；$I_"guide"$ 为高分辨率的全色图像（Panchromatic, PAN），包含清晰的空间几何结构。目标是生成既具有高空间分辨率又保留原始光谱特性的高分辨多光谱图像。如@fig:Pansharpening介绍 所示，全色锐化旨在将低分辨率多通道（4或8甚至更多）的多光谱图像与高分辨率的单通道全色图像融合，生成高分辨率的彩色图像。
 #figure(
-  caption: [全色锐化任务示意图。],
+  caption: [全色锐化任务示意图],
 )[
 #image("../images/02/Pansharpening介绍.png", width: 70%)
 ] <Pansharpening介绍>
@@ -25,7 +25,7 @@ set par(first-line-indent: 0pt)
 #heading(level: 4, numbering: none)[深度图超分]
 在深度图超分任务中，$I_"LR"$ 为低分辨率深度图，通常含有噪声；$I_"guide"$ 为同场景的高分辨率 RGB 彩色图像。如@fig:depth介绍 所示，目标是利用 RGB 图像的边缘纹理引导深度图的边缘恢复，同时防止纹理拷贝伪影。
 #figure(
-  caption: [深度图超分辨率任务示意图。],
+  caption: [深度图超分辨率任务示意图],
 )[
 #image("../images/02/深度图超分介绍.png", width: 80%)
 ] <depth介绍>
@@ -35,7 +35,7 @@ set par(first-line-indent: 0pt)
 磁共振图像超分辨率任务中，$I_"LR"$ 为低分辨率的某一模态 MR 图像（如 T2 加权像），扫描速度快但细节模糊；$I_"guide"$ 为高分辨率的另一模态 MR 图像（如 T1 加权像）。目标是利用 T1 的解剖结构细节信息辅助 T2 图像的重建。如@fig:MRI介绍 所示，通常利用 T1 加权像作为引导图像，增强 T2 加权像的空间分辨率。
 
 #figure(
-  caption: [磁共振图像超分辨率任务示意图。],
+  caption: [磁共振图像超分辨率任务示意图],
 )[
 #image("../images/02/MRI超分介绍.png", width: 70%)
 ] <MRI介绍>
@@ -92,6 +92,10 @@ set par(first-line-indent: 0pt)
 
 == 一体化图像恢复相关基础
 
+一体化图像恢复（All-in-One Image Restoration）旨在通过单一模型处理多种图像退化问题（如去噪、去雨、超分等），这对模型的特征表达能力和任务适应性提出了极高要求。传统的基于卷积神经网络（CNN）的方法虽然在单一任务上表现出色，但在处理多任务时往往受限于局部感受野，难以捕捉不同任务间的通用特征，且难以在同一参数空间内平衡不同任务的优化目标。
+
+近年来，深度学习技术的发展，特别是Transformer架构的引入，为一体化图像恢复提供了新的解决思路。Transformer凭借其强大的全局建模能力和动态自注意力机制，能够更好地建立长距离像素依赖，从而在统一框架下有效处理具有不同统计特性的退化图像。此外，为了进一步提升模型在多任务场景下的性能与效率，研究者们引入了混合专家系统（MoE）与提示学习（Prompt Learning）等机制，使得模型能够根据输入图像的特性动态调整计算路径，实现“一专多能”。本节将详细介绍支撑一体化图像恢复任务的核心技术，包括Transformer基础架构、Restormer骨干网络设计以及混合专家系统等。
+
 === Transformer与ViT
 
 近年来，Transformer架构凭借自注意力机制在自然语言处理领域的颠覆性成功，被Dosovitskiy等人@dosovitskiy2020image 以Vision Transformer (ViT)的形式引入计算机视觉。不同于传统CNN依赖局部感受野的卷积操作，ViT将图像分割为非重叠Patch并展平为序列，利用多头自注意力机制捕捉全局长距离依赖，这使其更适合处理高分辨率图像中的复杂纹理结构。
@@ -133,7 +137,7 @@ set par(first-line-indent: 0pt)
 
 
 #figure(
-  caption: [混合专家系统 (MoE) 架构示意图。],
+  caption: [混合专家系统 (MoE) 架构示意图],
 )[
 #image("../images/02/MOE.png", width: 60%)
 ] <moe>
@@ -177,7 +181,7 @@ set par(first-line-indent: 0pt)
 视觉-语言预训练模型旨在建立图像与文本之间的语义关联。OpenAI提出的CLIP（Contrastive Language-Image Pre-training）@radford2021learning 是其中的里程碑式工作。如@fig:CLIP 所示，CLIP包含一个文本编码器（Text Encoder, 通常是Transformer）和一个图像编码器（Image Encoder, ResNet或ViT）。
 
 #figure(
-  caption: [CLIP模型架构示意图。],
+  caption: [CLIP模型架构示意图],
 )[
 #image("../images/02/CLIP.png", width: 90%)
 ] <CLIP>
@@ -194,7 +198,7 @@ CLIP的核心创新在于通过大规模的对比学习，将图像和其对应�
 如@fig:prompt 所示，在计算机视觉及多模态领域，提示学习被引入用于适应不同的视觉任务。通过将任务描述（如“去噪”、“超分”、“风格迁移”）转化为提示向量注入到模型中，可以动态调整模型的行为。
 
 #figure(
-  caption: [提示学习 (Prompt Learning)在图像复原中的应用示意图。],
+  caption: [提示学习 (Prompt Learning)在图像复原中的应用示意图],
 )[
 #image("../images/02/Prompt.png", width: 100%)
 ] <prompt>

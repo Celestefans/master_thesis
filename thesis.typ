@@ -54,7 +54,7 @@
 
 // 文稿设置。fix-cjk 用于修复中文字符的换行问题。
 #show: doc.with(fix-cjk: true)
-
+// #set page(numbering: "Ⅰ")
 // 字体展示测试页
 // #fonts-display-page()
 

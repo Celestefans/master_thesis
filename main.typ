@@ -62,6 +62,7 @@
 // 文稿设置。fix-cjk 用于修复中文字符的换行问题。
 #show: doc.with(fix-cjk: true)
 
+// #set page(numbering: "I")
 // 字体展示测试页
 // #fonts-display-page()
 
@@ -79,7 +80,7 @@
 
 // 答辩委员会页（仅研究生）
 // #committee()
-
+#set page(numbering: "I")
 // 前言
 #show: preface
 
@@ -200,7 +201,7 @@
 
 #heading(level: 4, numbering: none)[论文发表情况]
   // - WANG T, #strong[WANG J], YAN Q, et al. 
-  Task-aware All-in-one Guided Image Super-Resolution[J]. Pattern Recognition, 2026: 11348（SCI 1区）
+  - Task-aware All-in-one Guided Image Super-Resolution[J]. Pattern Recognition, 2026: 11348（SCI 1区）
 
 
 
