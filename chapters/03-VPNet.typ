@@ -98,10 +98,10 @@ $ bold(s) = bold(f)_"fuse" bold(W)_g in RR^(N times M) . $
 在训练阶段，为了增强路由决策的探索性并防止门控网络过早坍缩至固定的专家分配模式，VPRM 引入了带噪声的 Top-K门控机制。具体而言，通过另一组可学习参数 $bold(W)_"noise" in RR^(2C_l times M)$ 生成依赖于输入的噪声标准差，并向路由分数中注入可控的高斯噪声：
 
 $ bold(sigma) = "Softplus"(bold(f)_"fuse" bold(W)_"noise") + epsilon , $
-$ tilde(bold(s)) = bold(s) + bold(xi) dot.circle bold(sigma), quad bold(xi) tilde cal(N)(0, bold(I)) , $
+$ tilde(bold(s)) = bold(s) + bold(xi) dot.o bold(sigma), quad bold(xi) tilde cal(N)(0, bold(I)) , $
 #{
 set par(first-line-indent: 0pt)
-[其中，$epsilon$ 为一个极小的正常数以保证数值稳定性，$dot.circle$ 表示逐元素乘法。基于带噪声的路由分数 $tilde(bold(s))$，门控网络为每个像素选取得分最高的 $k$ 个专家（在本章实现中 $k = 2$），并对这 $k$ 个专家的分数进行 Softmax 归一化以获得最终的门控权重：
+[其中，$epsilon$ 为一个极小的正常数以保证数值稳定性，$dot.o$ 表示逐元素乘法。基于带噪声的路由分数 $tilde(bold(s))$，门控网络为每个像素选取得分最高的 $k$ 个专家（在本章实现中 $k = 2$），并对这 $k$ 个专家的分数进行 Softmax 归一化以获得最终的门控权重：
 ]
 }
 

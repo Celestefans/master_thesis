@@ -118,10 +118,10 @@ set par(first-line-indent: 0pt)
 
 #heading(level: 4, numbering: none)[门控前馈网络]
     标准Transformer中的前馈网络（FFN）通常由两个全连接层和GELU激活函数组成。Restormer引入了门控前馈网络GDFN来增强特征变换的非线性表达能力。GDFN包含两个并行的路径，通过 $1 times 1$ 卷积扩展通道数，接着使用 $3 times 3$ 深度可分离卷积（Depth-wise Convolution）来编码具备空间局部性的上下文信息。其中一条路径经过GELU激活后作为门控信号，与另一条路径进行逐元素相乘：
-    $ X_"out" = W_p^0 ("GELU"(W_d^1 (W_p^1 (X))) dot.circle W_d^2 (W_p^2 (X))) , $
+    $ X_"out" = W_p^0 ("GELU"(W_d^1 (W_p^1 (X))) dot.o W_d^2 (W_p^2 (X))) , $
     #{
     set par(first-line-indent: 0pt)
-    [其中，$dot.circle$ 表示逐元素乘法，$W_p$ 表示 $1 times 1$ 点卷积，$W_d$ 表示 $3 times 3$ 深度卷积。这种门控机制允许网络有选择地传递信息流，从而更精细地控制特征的激活与抑制。]
+    [其中，$dot.o$ 表示逐元素乘法，$W_p$ 表示 $1 times 1$ 点卷积，$W_d$ 表示 $3 times 3$ 深度卷积。这种门控机制允许网络有选择地传递信息流，从而更精细地控制特征的激活与抑制。]
     }
     
 

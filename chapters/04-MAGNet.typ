@@ -75,10 +75,10 @@ set par(first-line-indent: 0pt)
 #heading(level: 4, numbering: none)[跨模态特征调制]
 
 为了将显式的语义指令注入到底层的视觉特征中，本文采用特征线性调制（FiLM）机制。具体而言，利用两个全连接层从文本特征 $F_"text"$ 中预测出缩放系数 $gamma$ 和平移系数 $beta$，对视觉特征 $F_"vis"$ 进行通道级的仿射变换：
-$ F_"mix" = (1 + gamma(F_"text")) dot.circle F_"vis" + beta(F_"text") , $
+$ F_"mix" = (1 + gamma(F_"text")) dot.o F_"vis" + beta(F_"text") , $
 #{
 set par(first-line-indent: 0pt)
-[其中，$dot.circle$ 表示逐元素乘法，公式中的 $1$ 代表残差连接，保证了视觉信息的完整传递。经过这一步，生成的 $F_"mix"$ 既包含了图像的空间纹理信息，也被赋予了明确的任务语义倾向。
+[其中，$dot.o$ 表示逐元素乘法，公式中的 $1$ 代表残差连接，保证了视觉信息的完整传递。经过这一步，生成的 $F_"mix"$ 既包含了图像的空间纹理信息，也被赋予了明确的任务语义倾向。
 ]
 }
 
@@ -198,7 +198,7 @@ MAG-Net 基于 PyTorch 框架实现，并在单块 NVIDIA RTX 3090 GPU 上进行
 #figure(
   caption: [单任务设置下磁共振图像超分任务的可视化对比与误差图],
 )[
-#image("../images/04/compare_single_mri.png", width: 105%)
+#image("../images/04/compare_single_mri.png", width: 100%)
 ] <compare_one-by-one_mri>
 
 **深度图超分任务：**
