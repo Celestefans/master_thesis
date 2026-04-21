@@ -24,7 +24,13 @@
   // anonymous: true,  // 盲审模式
   twoside: false, // 双面模式，会加入空白页，便于打印。双面模式下 front matter 部分页码始终在右侧。
   // 可自定义字体，先英文字体后中文字体，应传入「宋体」、「黑体」、「楷体」、「仿宋」、「等宽」。
-  // fonts: (楷体: ("Times New Roman", "FZKai-Z03S"))
+  fonts: (
+    宋体: ("Times New Roman", "SimSun", "Songti SC", "STSong"),
+    黑体: ("Times New Roman", "SimHei", "Heiti SC", "STHeiti"),
+    楷体: ("Times New Roman", "KaiTi", "Kaiti SC", "STKaiti"),
+    仿宋: ("Times New Roman", "FangSong", "FangSong SC", "STFangsong"),
+    等宽: ("Times New Roman", "Consolas", "Courier New", "Menlo", "SimSun", "Songti SC", "STSong"),
+  ),
   info: (
     // 如有需要，title 与 department 均支持多行。可以使用 \n 来分行或使用列表。
     title: ("基于动态路由与多模态提示\n的一体化引导式图像超分"),
@@ -90,9 +96,9 @@
 )[
   引导式图像超分旨在利用高分辨率的辅助图像（如全色图像、RGB图像等）来提升低分辨率目标图像的空间分辨率，被广泛应用于遥感监测、医学成像及深度估计等领域。然而，现有的引导超分辨率方法主要针对单一领域的特定任务设计，由于不同任务间存在巨大的模态差异和成像机理鸿沟，导致模型在跨任务场景下泛化能力不足，且面临着任务间相互干扰的挑战。为打破“一任务一模型”的传统范式，实现多模态任务的高效协同与通用重建，深度挖掘不同任务之间的潜在关联，本文基于提示学习与混合专家机制，提出了层层递进的两种一体化引导式图像超分方法，具体如下：
 
-  （1）针对一体化引导式图像超分任务中存在的“参数干扰”与“负迁移”问题，提出了一种基于视觉感知动态路由的图像重建方法（VP-Net）。该方法创新性地引入混合专家（MoE）架构，利用引导图像的纹理、边缘等底层视觉特征作为隐式路由信号，动态激活特定任务的专家网络。这种基于视觉特征的“物理隔离”策略，有效缓解了多任务间的优化冲突，在不显著增加计算成本的前提下实现了对不同模态数据的差异化处理。
+  （1）针对一体化引导式图像超分任务中存在的参数干扰与负迁移问题，提出了一种基于视觉感知动态路由的图像重建方法（VP-Net）。该方法创新性地引入混合专家（MoE）架构，利用引导图像的纹理、边缘等底层视觉特征作为隐式路由信号，动态激活特定任务的专家网络。这种基于视觉特征的“物理隔离”策略，有效缓解了多任务间的优化冲突，在不显著增加计算成本的前提下实现了对不同模态数据的差异化处理。
 
-  （2）针对纯视觉感知路由机制存在的语义缺失问题，提出了一种融合多模态语义提示的图像重建方法（MAG-Net）。该方法在动态路由架构的基础上引入文本语义先验，设计了多模态提示生成模块（MPGM），利用预训练视觉-语言模型将任务描述转化为高维语义锚点，并注入到路由决策过程中。通过“视觉感知+语义引导”的双重驱动机制，该方法消除了视觉特征的歧义性，实现了像素级与任务级的精细化调控，显著提升了模型在全色锐化、深度图超分及磁共振重建等任务上的性能。
+  （2）针对纯视觉感知路由机制存在的语义缺失问题，提出了一种融合多模态语义提示的图像重建方法（MAG-Net）。该方法在动态路由架构的基础上引入文本语义先验，设计了多模态提示生成模块（MPGM），利用预训练视觉-语言模型将任务描述转化为高维语义锚点，并注入到路由决策过程中。通过视觉感知+语义引导的双重驱动机制，该方法消除了视觉特征的歧义性，实现了像素级与任务级的精细化调控，显著提升了模型在全色锐化、深度图超分及磁共振重建等任务上的性能。
   
   （3）针对现有先进深度学习模型多以代码脚本形式存在、使用门槛高且难以直接服务于垂直领域专家的问题，设计并实现了一体化引导式图像超分演示系统。该系统基于 B/S 架构，集成了本文提出的核心算法模型，通过封装复杂的模型推理与环境配置过程，为医学、遥感及测绘等领域的非技术用户提供了一个零代码、可视化的高质量图像增强平台，有效缩短了从算法研究到实际应用的距离。
 ]
@@ -103,15 +109,18 @@
 )[
   Guided image super-resolution aims to enhance the spatial resolution of low-resolution target images using high-resolution auxiliary images (such as panchromatic images, RGB images, etc.), and is widely used in remote sensing monitoring, medical imaging, and depth estimation. However, existing guided super-resolution methods are mainly designed for single specific tasks. Due to the huge modal differences and imaging mechanism gaps between different tasks, models lack generalization capability in cross-task scenarios and face the challenge of mutual interference between tasks. To break the traditional paradigm of "one model for one task" and achieve efficient collaboration and general reconstruction for multi-modal tasks, this thesis proposes two progressive all-in-one guided image super-resolution methods based on prompt learning and Mixture-of-Experts (MoE) mechanism, specifically as follows:
 
-  (1) Addressing the problems of "parameter interference" and "negative transfer" in all-in-one guided image super-resolution tasks, a dynamic routing image reconstruction method based on visual perception (VP-Net) is proposed. This method innovatively introduces the Mixture-of-Experts (MoE) architecture, using low-level visual features such as textures and edges of the guidance image as implicit routing signals to dynamically activate task-specific expert networks. This "physical isolation" strategy based on visual features effectively alleviates optimization conflicts between multi-tasks and achieves differentiated processing of multi-modal data without significantly increasing computational costs.
+  (1) Addressing the problems of parameter interference and negative transfer in all-in-one guided image super-resolution tasks, a dynamic routing image reconstruction method based on visual perception (VP-Net) is proposed. This method innovatively introduces the Mixture-of-Experts (MoE) architecture, using low-level visual features such as textures and edges of the guidance image as implicit routing signals to dynamically activate task-specific expert networks. This "physical isolation" strategy based on visual features effectively alleviates optimization conflicts between multi-tasks and achieves differentiated processing of multi-modal data without significantly increasing computational costs.
 
-  (2) Addressing the problems of "visual ambiguity" and "semantic absence" existing in pure visual perception routing mechanisms, an image reconstruction method integrating multi-modal semantic prompts (MAG-Net) is proposed. Based on the dynamic routing architecture, this method introduces textual semantic priors and designs a Multi-modal Prompt Generation Module (MPGM), which utilizes a pre-trained vision-language model to transform task descriptions into high-dimensional semantic anchors and injects them into the routing decision process. Through the dual-drive mechanism of "visual perception + semantic guidance", this method eliminates the ambiguity of visual features, achieves refined control at both pixel and task levels, and significantly improves the model's performance on tasks such as pansharpening, depth map super-resolution, and MRI reconstruction.
+  (2) Addressing the problems of "visual ambiguity" and "semantic absence" existing in pure visual perception routing mechanisms, an image reconstruction method integrating multi-modal semantic prompts (MAG-Net) is proposed. Based on the dynamic routing architecture, this method introduces textual semantic priors and designs a Multi-modal Prompt Generation Module (MPGM), which utilizes a pre-trained vision-language model to transform task descriptions into high-dimensional semantic anchors and injects them into the routing decision process. Through the dual-drive mechanism of visual perception + semantic guidance, this method eliminates the ambiguity of visual features, achieves refined control at both pixel and task levels, and significantly improves the model's performance on tasks such as pansharpening, depth map super-resolution, and MRI reconstruction.
 
   (3) Addressing the problem that existing advanced deep learning models mostly exist in the form of code scripts, have high barriers to use, and are difficult to directly serve experts in vertical fields, an all-in-one guided image super-resolution demonstration system is designed and implemented. Based on the B/S architecture, this system integrates the core algorithm models proposed in this thesis. By encapsulating complex model inference and environment configuration processes, it provides a zero-code, visual, and high-quality image enhancement platform for non-technical users in fields such as medicine, remote sensing, and surveying, effectively shortening the distance from algorithm research to practical application.
 ]
 
 // 目录。preface 中的项目均可以通过可选的 outlined 属性控制是否在目录中显示
 #outline-page(outlined: false)
+
+// 修复插图和表格目录中英文字体不一致的问题（强制英文使用 Times New Roman，中文使用宋体）
+#show outline: set text(font: ("Times New Roman", "SimSun", "Songti SC", "STSong"))
 
 // 插图目录
 #list-of-figures()
