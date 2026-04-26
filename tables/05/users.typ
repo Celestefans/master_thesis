@@ -1,5 +1,5 @@
 #figure(
-  caption: [用户信息表 (`users`)],
+  caption: [用户信息表 (#text(font: "Times New Roman")[`users`])],
   kind: table,
 )[
   #table(

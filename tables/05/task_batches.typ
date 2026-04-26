@@ -1,5 +1,5 @@
 #figure(
-  caption: [任务批次表 (`task_batches`)],
+  caption: [任务批次表 (#text(font: "Times New Roman")[`task_batches`])],
   kind: table,
 )[
   #table(

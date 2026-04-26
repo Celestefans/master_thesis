@@ -1,5 +1,5 @@
 #figure(
-  caption: [系统日志表 (`system_logs`)],
+  caption: [系统日志表 (#text(font: "Times New Roman")[`system_logs`])],
   kind: table,
 )[
   #table(

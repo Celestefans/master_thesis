@@ -25,17 +25,17 @@ set par(first-line-indent: 0pt)
 #heading(level: 4, numbering: none)[深度图超分]
 在深度图超分任务中，$I_"LR"$ 为低分辨率深度图，通常含有噪声；$I_"guide"$ 为同场景的高分辨率 RGB 彩色图像。如@fig:depth介绍 所示，目标是利用 RGB 图像的边缘纹理引导深度图的边缘恢复，同时防止纹理拷贝伪影。
 #figure(
-  caption: [深度图超分辨率任务示意图],
+  caption: [深度图超分任务示意图],
 )[
 #image("../images/02/深度图超分介绍.png", width: 80%)
 ] <depth介绍>
 
 
 #heading(level: 4, numbering: none)[磁共振图像超分]
-磁共振图像超分辨率任务中，$I_"LR"$ 为低分辨率的某一模态 MR 图像（如 T2 加权像），扫描速度快但细节模糊；$I_"guide"$ 为高分辨率的另一模态 MR 图像（如 T1 加权像）。目标是利用 T1 的解剖结构细节信息辅助 T2 图像的重建。如@fig:MRI介绍 所示，通常利用 T1 加权像作为引导图像，增强 T2 加权像的空间分辨率。
+磁共振图像超分任务中，$I_"LR"$ 为低分辨率的某一模态 MR 图像（如 T2 加权像），扫描速度快但细节模糊；$I_"guide"$ 为高分辨率的另一模态 MR 图像（如 T1 加权像）。目标是利用 T1 的解剖结构细节信息辅助 T2 图像的重建。如@fig:MRI介绍 所示，通常利用 T1 加权像作为引导图像，增强 T2 加权像的空间分辨率。
 
 #figure(
-  caption: [磁共振图像超分辨率任务示意图],
+  caption: [磁共振图像超分任务示意图],
 )[
 #image("../images/02/MRI超分介绍.png", width: 70%)
 ] <MRI介绍>
@@ -118,10 +118,10 @@ set par(first-line-indent: 0pt)
 
 #heading(level: 4, numbering: none)[门控前馈网络]
     标准Transformer中的前馈网络（FFN）通常由两个全连接层和GELU激活函数组成。Restormer引入了门控前馈网络GDFN来增强特征变换的非线性表达能力。GDFN包含两个并行的路径，通过 $1 times 1$ 卷积扩展通道数，接着使用 $3 times 3$ 深度可分离卷积（Depth-wise Convolution）来编码具备空间局部性的上下文信息。其中一条路径经过GELU激活后作为门控信号，与另一条路径进行逐元素相乘：
-    $ X_"out" = W_p^0 ("GELU"(W_d^1 (W_p^1 (X))) dot.o W_d^2 (W_p^2 (X))) , $
+    $ X_"out" = W_p^0 ("GELU"(W_d^1 (W_p^1 (X))) dot.circle W_d^2 (W_p^2 (X))) , $
     #{
     set par(first-line-indent: 0pt)
-    [其中，$dot.o$ 表示逐元素乘法，$W_p$ 表示 $1 times 1$ 点卷积，$W_d$ 表示 $3 times 3$ 深度卷积。这种门控机制允许网络有选择地传递信息流，从而更精细地控制特征的激活与抑制。]
+    [其中，$dot.circle$ 表示逐元素乘法，$W_p$ 表示 $1 times 1$ 点卷积，$W_d$ 表示 $3 times 3$ 深度卷积。这种门控机制允许网络有选择地传递信息流，从而更精细地控制特征的激活与抑制。]
     }
     
 
@@ -137,7 +137,7 @@ set par(first-line-indent: 0pt)
 
 
 #figure(
-  caption: [混合专家系统 (MoE) 架构示意图],
+  caption: [混合专家系统 (MoE) 架构示意图@moe_original],
 )[
 #image("../images/02/MOE.png", width: 60%)
 ] <moe>
@@ -181,7 +181,7 @@ set par(first-line-indent: 0pt)
 视觉-语言预训练模型旨在建立图像与文本之间的语义关联。OpenAI提出的CLIP（Contrastive Language-Image Pre-training）@radford2021learning 是其中的里程碑式工作。如@fig:CLIP 所示，CLIP包含一个文本编码器（Text Encoder, 通常是Transformer）和一个图像编码器（Image Encoder, ResNet或ViT）。
 
 #figure(
-  caption: [CLIP模型架构示意图],
+  caption: [CLIP模型架构示意图@radford2021learning],
 )[
 #image("../images/02/CLIP.png", width: 90%)
 ] <CLIP>
@@ -198,7 +198,7 @@ CLIP的核心创新在于通过大规模的对比学习，将图像和其对应�
 如@fig:prompt 所示，在计算机视觉及多模态领域，提示学习被引入用于适应不同的视觉任务。通过将任务描述（如“去噪”、“超分”、“风格迁移”）转化为提示向量注入到模型中，可以动态调整模型的行为。
 
 #figure(
-  caption: [提示学习 (Prompt Learning)在图像复原中的应用示意图],
+  caption: [提示学习 (Prompt Learning)在图像复原中的应用示意图@potlapalli2023promptir],
 )[
 #image("../images/02/Prompt.png", width: 100%)
 ] <prompt>

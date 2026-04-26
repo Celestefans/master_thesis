@@ -151,7 +151,7 @@
 
 == 常规图表
 
-引用@tbl:timing，引用@tbl:timing-tlt，以及@fig:ecnu-logo。引用图表时，表格和图片分别需要加上 `tbl:`和`fig:` 前缀才能正常显示编号。
+// 引用@tbl:timing，引用@tbl:timing-tlt，以及@fig:ecnu-logo。引用图表时，表格和图片分别需要加上 `tbl:`和`fig:` 前缀才能正常显示编号。
 
 #figure(
   caption: [常规表],
@@ -182,12 +182,12 @@
   需要 Typst 版本 >= 0.12.0：#link("https://github.com/typst/typst/releases/tag/v0.12.0")。
 ] 来设置类似的浮动图表位置。可用的值有 `top`、`bottom` 与 `none`，分别对应 LaTeX 中的 t、b 与 h。若要实现类似 LaTeX 中 `p` 属性的整页图表，可结合 `pagebreak()` 函数与图片上下的 `h(1fr)` 来实现。
 
-#figure(
-  placement: top, // 顶部浮动
-  caption: [顶部浮动图片。A floating figure at the top.],
-)[
-  #image("images/ecnu-emblem.svg", width: 20%)
-] <ecnu-logo>
+// #figure(
+//   placement: top, // 顶部浮动
+//   caption: [顶部浮动图片。A floating figure at the top.],
+// )[
+//   #image("images/ecnu-emblem.svg", width: 20%)
+// ] <ecnu-logo>
 
 == 中英双语图表
 
@@ -195,14 +195,14 @@
 
 本模板支持中英双语的图表标题功能。双语图表的详细使用说明请参见文档 `README.md`。以下展示几个基本示例:
 
-#bilingual-figure(
-  image("images/ecnu-emblem.svg", width: 20%),
-  kind: "figure",
-  caption-position: bottom,
-  caption: "双语图片标题",
-  caption-en: "Bilingual Figure Caption",
-  manual-number: "1.1" // need manual numbering
-)
+// #bilingual-figure(
+//   image("images/ecnu-emblem.svg", width: 20%),
+//   kind: "figure",
+//   caption-position: bottom,
+//   caption: "双语图片标题",
+//   caption-en: "Bilingual Figure Caption",
+//   manual-number: "1.1" // need manual numbering
+// )
 
 #bilingual-figure(
   table(
@@ -350,13 +350,13 @@ _感谢以下模板提供的参考：_
 
 === 附录子子标题
 
-附录内容，这里也可以加入图片，例如@fig:appendix-img。
+// 附录内容，这里也可以加入图片，例如@fig:appendix-img。
 
-#figure(
-  caption: [图片测试],
-)[
-#image("images/ecnu-emblem.svg", width: 20%)
-] <appendix-img>
+// #figure(
+//   caption: [图片测试],
+// )[
+// #image("images/ecnu-emblem.svg", width: 20%)
+// ] <appendix-img>
 
 = 攻读硕/博士学位期间科研情况
 
